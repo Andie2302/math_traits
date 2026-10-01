@@ -11,6 +11,7 @@
 //! * Vektoren `[T; N]`: siehe [`vector`].
 
 pub mod cayley_dickson;
+pub mod dual;
 pub mod float;
 pub mod vector;
 
@@ -136,7 +137,7 @@ impl BinaryRelation<LessEq> for bool {
 laws! {
     bool {
         Additive: associative, commutative, identity, inverse, cancellative;
-        Multiplicative: associative, commutative, identity, idempotent;
+        Multiplicative: associative, commutative, identity, idempotent, inverse_where_defined;
         [Multiplicative, Additive]: distributive, zero_divisor_free, inverse_except_zero, nontrivial;
         Meet: associative, commutative, idempotent;
         Join: associative, commutative, idempotent;

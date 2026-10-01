@@ -141,3 +141,23 @@ structure!(
         + ScalarDistributesOverVectors<S>
         + ScalarDistributesOverScalars<S>
 );
+structure!(
+    /// `sin`/`cos` mit Pythagoras und Additionstheoremen.
+    Trigonometric<> = Pythagorean<Multiplicative, Additive>
+        + SineAddition<Multiplicative, Additive>
+        + CosineAddition<Multiplicative, Additive>
+);
+structure!(
+    /// Kommutativer Ring mit `exp`, `ln`, `sqrt`, `sin`, `cos`. Darin liegen
+    /// ℝ, ℂ und die dualen Zahlen über ihnen (AutoDiff).
+    ElementaryRing<> = CommutativeRing
+        + ExpHomomorphism<Additive, Multiplicative>
+        + ExpInvertsLn<Multiplicative>
+        + SqrtSquares<Multiplicative>
+        + Trigonometric
+);
+structure!(
+    /// Modell der reellen Zahlen: geordneter Körper mit Elementarfunktionen,
+    /// in dem jede nichtnegative Zahl eine Wurzel hat.
+    RealField<> = OrderedField + ElementaryRing + SqrtOfNonNegative<Additive, LessEq>
+);

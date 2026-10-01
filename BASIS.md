@@ -30,6 +30,8 @@ jederzeit möglich.
 
 ## Stand
 
+### Bausteine
+
 | Ziel | Status | Was dafür nötig war |
 |---|---|---|
 | Monoid, Gruppe, Ring, Körper, Verband, Ordnung | erreicht | |
@@ -37,13 +39,32 @@ jederzeit möglich.
 | Euklidischer Ring, `gcd` | erreicht | **Signatur** `HasDivRem`, `HasEuclideanSize` |
 | Modul, Vektorraum (`[T; N]`) | erreicht | **Signatur** `ScalarMul<S>` |
 | ℂ, ℍ, 𝕆, 𝕊 (Cayley-Dickson) | erreicht | **Signatur** `HasConjugate`; Struktur `NonAssociativeRing` |
-| Bisektion | erreicht | `OrderedField` |
-| Gauß (exakt / mit Pivot) | erreicht | `Field` / `OrderedField` |
-| Newton in `n` Dimensionen | erreicht | `OrderedField` |
-| Normierter Raum | **offen** | **Signatur** `‖·‖: V → S` |
+| Bisektion, Gauß, Newton (n-dim.) | erreicht | `OrderedField` |
+| Elementarfunktionen (`RealField`, `ElementaryRing`) | erreicht | **Signatur** `HasSqrt`, `HasExp`, `HasLn`, `HasSinCos` |
+| AutoDiff vorwärts, 1. und 2. Ableitung, Jacobi | erreicht | duale Zahlen; Gesetz `InverseWhereDefined` |
+| Skalarprodukt, Norm als Folgerung | **offen (Schritt 2)** | **Signatur** `⟨·,·⟩: V × V → S` |
+| Einheitswurzeln (FFT) | **offen (Schritt 3)** | **Signatur** primitive n-te Einheitswurzel |
+| Algebra (Skalare vertauschen mit Produkt) | offen | nur ein Gesetz |
 
-Es bleibt also **eine Signatur-Erweiterung**: die Norm. Danach ist die
-Basis nach diesem Kriterium für die bisherigen Ziele abgeschlossen.
+### Projekte
+
+| Projekt | Basis bereit? | Fehlt noch |
+|---|---|---|
+| IAPWS-95/06/10, trockene Luft | **ja** | nur Implementierung (Formeln, Koeffizienten) |
+| Droste-Effekt („Logarithmus eines Bildes“) | **ja** | nur Implementierung (Bild-Abtastung) |
+| 2-/3-Körper-Problem | nein | Schritt 2 |
+| Navier-Stokes | nein | Schritt 2, evtl. 3 |
+| FFT 1D/2D/3D | nein | Schritt 3 |
+| Neuronale Netze | nein | Schritte 2 und 3, Rückwärts-AutoDiff (Implementierung) |
+
+Es bleiben **zwei Signatur-Erweiterungen**: Skalarprodukt und
+Einheitswurzeln. Danach braucht kein Projekt der Liste mehr eine neue
+Signatur. Das ist der Punkt, an dem du zu den Implementierungen wechselst.
+
+Was bewusst **nicht** in die Basis gehört: Tensoren, Matrizen, Gitter und
+Berechnungsgraphen (Datentypen, die Strukturen *erfüllen*), Zufall
+(`rand`-Crate), physikalische Einheiten (z. B. `uom`) und die Vollständigkeit
+von ℝ (nur für Beweise nötig).
 
 ## Bekannte Lücke: Folgerungen zwischen Gesetzen
 

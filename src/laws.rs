@@ -15,7 +15,8 @@
 use crate::__private::Token;
 use crate::signature::{
     Additive, BinaryOp, BinaryRelation, HasAbsorbing, HasConjugate, HasDivRem, HasEuclideanSize,
-    HasIdentity, HasInverse, HasPartialInverse, Multiplicative, ScalarMul, op,
+    HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse, HasSinCos, HasSqrt, Multiplicative,
+    ScalarMul, op,
 };
 
 // ===========================================================================
@@ -282,6 +283,21 @@ pub trait Anticommutative<Mul, Add>: BinaryOp<Mul> + HasInverse<Add> {
     }
 }
 
+/// `try_inverse(x) = Some(y)  ⇒  y · x = 1 = x · y`: Wo ein Inverses
+/// geliefert wird, ist es korrekt. Sagt nichts darüber, *wo* es existiert.
+pub trait InverseWhereDefined<Mul>: HasPartialInverse<Mul> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        let one = <Self as HasIdentity<Mul>>::identity();
+        x.try_inverse()
+            .is_none_or(|y| op::<Mul, _>(&y, x) == one && op::<Mul, _>(x, &y) == one)
+    }
+}
+
 /// `x ≠ 0  ⇒  x⁻¹ existiert und x⁻¹ · x = 1`, wobei `0` das Element von `Add` ist.
 pub trait LeftInverseExceptZero<Mul, Add>: HasPartialInverse<Mul> + HasIdentity<Add> {
     #[doc(hidden)]
@@ -509,5 +525,104 @@ pub trait ScalarDistributesOverScalars<S>: ScalarMul<S> + BinaryOp<Additive> {
         S: BinaryOp<Additive>,
     {
         v.scale(&op::<Additive, _>(s, t)) == op::<Additive, _>(&v.scale(s), &v.scale(t))
+    }
+}
+
+// ===========================================================================
+// 10. Elementarfunktionen
+// ===========================================================================
+
+/// `exp(x + y) = exp(x) · exp(y)`
+pub trait ExpHomomorphism<Add, Mul>: HasExp + BinaryOp<Add> + BinaryOp<Mul> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self, y: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        op::<Add, _>(x, y).exp() == op::<Mul, _>(&x.exp(), &y.exp())
+    }
+}
+
+/// `ln(x) = y  ⇒  exp(y) = x`
+///
+/// Der Parameter `Mul` dient nur der Einordnung (Schlüsselwort unter
+/// `Multiplicative:`).
+pub trait ExpInvertsLn<Mul>: HasExp + HasLn {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        x.ln().is_none_or(|y| y.exp() == *x)
+    }
+}
+
+/// `sqrt(x) = y  ⇒  y · y = x`
+pub trait SqrtSquares<Mul>: HasSqrt + BinaryOp<Mul> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        x.sqrt().is_none_or(|y| op::<Mul, _>(&y, &y) == *x)
+    }
+}
+
+/// `0 R x  ⇒  sqrt(x)` existiert und `0 R sqrt(x)`
+pub trait SqrtOfNonNegative<Add, R>: HasSqrt + HasIdentity<Add> + BinaryRelation<R> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool {
+        let zero = <Self as HasIdentity<Add>>::identity();
+        !zero.relates(x) || x.sqrt().is_some_and(|y| zero.relates(&y))
+    }
+}
+
+/// `sin²(x) + cos²(x) = 1`
+pub trait Pythagorean<Mul, Add>: HasSinCos + HasIdentity<Mul> + BinaryOp<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        let (s, c) = (x.sin(), x.cos());
+        op::<Add, _>(&op::<Mul, _>(&s, &s), &op::<Mul, _>(&c, &c))
+            == <Self as HasIdentity<Mul>>::identity()
+    }
+}
+
+/// `sin(x + y) = sin(x)·cos(y) + cos(x)·sin(y)`
+pub trait SineAddition<Mul, Add>: HasSinCos + BinaryOp<Mul> + BinaryOp<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self, y: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        op::<Add, _>(x, y).sin()
+            == op::<Add, _>(
+                &op::<Mul, _>(&x.sin(), &y.cos()),
+                &op::<Mul, _>(&x.cos(), &y.sin()),
+            )
+    }
+}
+
+/// `cos(x + y) = cos(x)·cos(y) − sin(x)·sin(y)`
+pub trait CosineAddition<Mul, Add>: HasSinCos + BinaryOp<Mul> + HasInverse<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self, y: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        op::<Add, _>(x, y).cos()
+            == op::<Add, _>(
+                &op::<Mul, _>(&x.cos(), &y.cos()),
+                &op::<Mul, _>(&x.sin(), &y.sin()).inverse(),
+            )
     }
 }

@@ -106,6 +106,9 @@ macro_rules! __law {
     (scalar_compatible; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ScalarCompatible; $g $t; $a); };
     (scalar_distributes_over_vectors; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ScalarDistributesOverVectors; $g $t; $a); };
     (scalar_distributes_over_scalars; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ScalarDistributesOverScalars; $g $t; $a); };
+    (exp_inverts_ln; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ExpInvertsLn; $g $t; $a); };
+    (sqrt_squares; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(SqrtSquares; $g $t; $a); };
+    (inverse_where_defined; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InverseWhereDefined; $g $t; $a); };
     // --- Atome: zwei Parameter -------------------------------------------------
     (left_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(LeftDistributive; $g $t; $a, $b); };
     (right_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(RightDistributive; $g $t; $a, $b); };
@@ -119,6 +122,11 @@ macro_rules! __law {
     (right_monotone; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(RightMonotone; $g $t; $a, $b); };
     (division_with_remainder; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(DivisionWithRemainder; $g $t; $a, $b); };
     (remainder_decreases; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(RemainderDecreases; $g $t; $a, $b); };
+    (exp_homomorphism; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(ExpHomomorphism; $g $t; $a, $b); };
+    (sqrt_of_non_negative; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(SqrtOfNonNegative; $g $t; $a, $b); };
+    (pythagorean; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(Pythagorean; $g $t; $a, $b); };
+    (sine_addition; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(SineAddition; $g $t; $a, $b); };
+    (cosine_addition; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(CosineAddition; $g $t; $a, $b); };
     // --- Atome: drei Parameter -------------------------------------------------
     (positive_product; $g:tt $t:ty; $a:ty, $b:ty, $c:ty) => { $crate::__impl_law!(PositiveProduct; $g $t; $a, $b, $c); };
     // --- Zusammengesetzte Schlüsselwörter --------------------------------------
@@ -179,6 +187,11 @@ macro_rules! __law {
     (euclidean; $g:tt $t:ty; $a:ty, $b:ty) => {
         $crate::__law!(division_with_remainder; $g $t; $a, $b);
         $crate::__law!(remainder_decreases; $g $t; $a, $b);
+    };
+    (trigonometric; $g:tt $t:ty; $a:ty, $b:ty) => {
+        $crate::__law!(pythagorean; $g $t; $a, $b);
+        $crate::__law!(sine_addition; $g $t; $a, $b);
+        $crate::__law!(cosine_addition; $g $t; $a, $b);
     };
     // --- Unbekannt -------------------------------------------------------------
     ($law:ident; $($rest:tt)*) => {

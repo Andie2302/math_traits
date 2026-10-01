@@ -8,9 +8,10 @@
 //! [`crate::structures`] ausdrücken lässt, fehlt ein Gesetz oder eine Signatur
 //! in der Basis.
 
+use crate::laws::InverseWhereDefined;
 use crate::signature::{Additive, HasIdentity, HasInverse, HasPartialInverse, Multiplicative, op};
 use crate::structures::{
-    CommutativeMonoid, DivisionRing, EuclideanRing, Group, Monoid, OrderedField,
+    CommutativeMonoid, DivisionRing, ElementaryRing, EuclideanRing, Group, Monoid, OrderedField,
 };
 
 /// `xⁿ` per Square-and-Multiply in `O(log n)` Schritten.
@@ -95,4 +96,24 @@ pub fn abs<T: OrderedField>(x: &T) -> T {
     } else {
         <T as HasInverse<Additive>>::inverse(x)
     }
+}
+
+/// `xʸ = exp(y · ln x)`, `None` wo `ln x` nicht definiert ist.
+pub fn powf<T: ElementaryRing>(x: &T, y: &T) -> Option<T> {
+    x.ln().map(|l| op::<Multiplicative, _>(y, &l).exp())
+}
+
+/// `tanh(x) = (e²ˣ − 1) / (e²ˣ + 1)`
+pub fn tanh<T: ElementaryRing + InverseWhereDefined<Multiplicative>>(x: &T) -> Option<T> {
+    let one = <T as HasIdentity<Multiplicative>>::identity();
+    let e2 = op::<Additive, _>(x, x).exp();
+    let num = sub(&e2, &one);
+    let den = op::<Additive, _>(&e2, &one);
+    den.try_inverse().map(|d| op::<Multiplicative, _>(&num, &d))
+}
+
+/// Logistische Funktion `σ(x) = 1 / (1 + e⁻ˣ)`
+pub fn sigmoid<T: ElementaryRing + InverseWhereDefined<Multiplicative>>(x: &T) -> Option<T> {
+    let one = <T as HasIdentity<Multiplicative>>::identity();
+    op::<Additive, _>(&one, &x.inverse().exp()).try_inverse()
 }

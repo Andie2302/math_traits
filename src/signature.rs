@@ -96,3 +96,32 @@ pub trait HasEuclideanSize {
 pub trait ScalarMul<S>: Sized {
     fn scale(&self, s: &S) -> Self;
 }
+
+// ===========================================================================
+// Elementarfunktionen
+// ===========================================================================
+//
+// Partielle Funktionen liefern `Option`: `None` außerhalb des
+// Definitionsbereichs (z. B. `ln` von `x ≤ 0` in ℝ). Die Gesetze sagen dann
+// nur etwas über die Werte, die es gibt.
+
+/// Quadratwurzel (Hauptzweig), `None` außerhalb des Definitionsbereichs.
+pub trait HasSqrt: Sized {
+    fn sqrt(&self) -> Option<Self>;
+}
+
+/// Exponentialfunktion.
+pub trait HasExp: Sized {
+    fn exp(&self) -> Self;
+}
+
+/// Natürlicher Logarithmus (Hauptzweig), `None` außerhalb des Definitionsbereichs.
+pub trait HasLn: Sized {
+    fn ln(&self) -> Option<Self>;
+}
+
+/// Sinus und Kosinus.
+pub trait HasSinCos: Sized {
+    fn sin(&self) -> Self;
+    fn cos(&self) -> Self;
+}
