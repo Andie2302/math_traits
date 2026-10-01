@@ -46,6 +46,12 @@ pub trait HasInverse<Op>: HasIdentity<Op> {
     fn inverse(&self) -> Self;
 }
 
+/// Eine *partielle* einstellige Operation `x ↦ x⁻¹`: `None`, wo es kein
+/// Inverses gibt (z. B. für `0` bei der Multiplikation eines Körpers).
+pub trait HasPartialInverse<Op>: HasIdentity<Op> {
+    fn try_inverse(&self) -> Option<Self>;
+}
+
 /// Ein ausgezeichnetes Element `z` für die Operation `Op`.
 pub trait HasAbsorbing<Op>: BinaryOp<Op> {
     fn absorbing() -> Self;

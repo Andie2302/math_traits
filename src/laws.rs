@@ -14,7 +14,7 @@
 
 use crate::__private::Token;
 use crate::signature::{
-    op, BinaryOp, BinaryRelation, HasAbsorbing, HasIdentity, HasInverse,
+    BinaryOp, BinaryRelation, HasAbsorbing, HasIdentity, HasInverse, HasPartialInverse, op,
 };
 
 // ===========================================================================
@@ -278,6 +278,46 @@ pub trait Anticommutative<Mul, Add>: BinaryOp<Mul> + HasInverse<Add> {
         Self: PartialEq,
     {
         op::<Mul, _>(x, y) == <Self as HasInverse<Add>>::inverse(&op::<Mul, _>(y, x))
+    }
+}
+
+/// `x ≠ 0  ⇒  x⁻¹ existiert und x⁻¹ · x = 1`, wobei `0` das Element von `Add` ist.
+pub trait LeftInverseExceptZero<Mul, Add>: HasPartialInverse<Mul> + HasIdentity<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        *x == <Self as HasIdentity<Add>>::identity()
+            || x.try_inverse()
+                .is_some_and(|i| op::<Mul, _>(&i, x) == <Self as HasIdentity<Mul>>::identity())
+    }
+}
+
+/// `x ≠ 0  ⇒  x⁻¹ existiert und x · x⁻¹ = 1`, wobei `0` das Element von `Add` ist.
+pub trait RightInverseExceptZero<Mul, Add>: HasPartialInverse<Mul> + HasIdentity<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        *x == <Self as HasIdentity<Add>>::identity()
+            || x.try_inverse()
+                .is_some_and(|i| op::<Mul, _>(x, &i) == <Self as HasIdentity<Mul>>::identity())
+    }
+}
+
+/// `1 ≠ 0`: Die Elemente von `Mul` und `Add` sind verschieden.
+pub trait NonTrivial<Mul, Add>: HasIdentity<Mul> + HasIdentity<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds() -> bool
+    where
+        Self: PartialEq,
+    {
+        <Self as HasIdentity<Mul>>::identity() != <Self as HasIdentity<Add>>::identity()
     }
 }
 

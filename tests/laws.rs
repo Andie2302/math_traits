@@ -42,7 +42,9 @@ fn bool_laws_exhaustive() {
         for y in BOOLS {
             assert!(<bool as Commutative<Additive>>::holds(&x, &y));
             assert!(<bool as Commutative<Multiplicative>>::holds(&x, &y));
-            assert!(<bool as ZeroDivisorFree<Multiplicative, Additive>>::holds(&x, &y));
+            assert!(<bool as ZeroDivisorFree<Multiplicative, Additive>>::holds(
+                &x, &y
+            ));
             assert!(<bool as Absorption<Meet, Join>>::holds(&x, &y));
             assert!(<bool as Absorption<Join, Meet>>::holds(&x, &y));
             assert!(<bool as Antisymmetric<LessEq>>::holds(&x, &y));
@@ -50,7 +52,9 @@ fn bool_laws_exhaustive() {
             for z in BOOLS {
                 assert!(<bool as Associative<Additive>>::holds(&x, &y, &z));
                 assert!(<bool as Associative<Multiplicative>>::holds(&x, &y, &z));
-                assert!(<bool as LeftDistributive<Multiplicative, Additive>>::holds(&x, &y, &z));
+                assert!(<bool as LeftDistributive<Multiplicative, Additive>>::holds(
+                    &x, &y, &z
+                ));
                 assert!(<bool as RightDistributive<Multiplicative, Additive>>::holds(&x, &y, &z));
                 assert!(<bool as LeftCancellative<Additive>>::holds(&x, &y, &z));
                 assert!(<bool as RightCancellative<Additive>>::holds(&x, &y, &z));
@@ -79,7 +83,9 @@ fn u8_laws() {
         for y in sample() {
             for z in sample() {
                 assert!(<u8 as Associative<Multiplicative>>::holds(&x, &y, &z));
-                assert!(<u8 as LeftDistributive<Multiplicative, Additive>>::holds(&x, &y, &z));
+                assert!(<u8 as LeftDistributive<Multiplicative, Additive>>::holds(
+                    &x, &y, &z
+                ));
                 assert!(<u8 as LeftCancellative<Additive>>::holds(&x, &y, &z));
             }
         }
@@ -90,8 +96,7 @@ fn u8_laws() {
 #[test]
 fn checks_detect_violations() {
     // u8 hat Nullteiler: 16 · 16 = 256 ≡ 0
-    let ok = (0..=255u8)
-        .all(|x| (0..=255u8).all(|y| zero_divisor_free::<u8>(&x, &y)));
+    let ok = (0..=255u8).all(|x| (0..=255u8).all(|y| zero_divisor_free::<u8>(&x, &y)));
     assert!(!ok);
 
     // f64: (0.1 + 0.2) + 0.3 ≠ 0.1 + (0.2 + 0.3)

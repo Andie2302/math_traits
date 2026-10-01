@@ -35,6 +35,10 @@ structure!(
 structure!(Cancellative<Op> = LeftCancellative<Op> + RightCancellative<Op>);
 structure!(Alternative<Op> = LeftAlternative<Op> + RightAlternative<Op>);
 structure!(Distributive<Mul, Add> = LeftDistributive<Mul, Add> + RightDistributive<Mul, Add>);
+structure!(
+    /// `x ≠ 0 ⇒ x⁻¹ · x = 1 = x · x⁻¹`
+    InverseExceptZero<Mul, Add> = LeftInverseExceptZero<Mul, Add> + RightInverseExceptZero<Mul, Add>
+);
 structure!(Monotone<Op, R> = LeftMonotone<Op, R> + RightMonotone<Op, R>);
 
 // ===========================================================================
@@ -71,7 +75,6 @@ structure!(
         + Distributive<Multiplicative, Additive>
 );
 structure!(CommutativeRing<> = Ring + Commutative<Multiplicative>);
-structure!(IntegralDomain<> = CommutativeRing + ZeroDivisorFree<Multiplicative, Additive>);
 structure!(
     /// Ring, in dem `x·x = x` gilt. Er ist automatisch kommutativ.
     BooleanRing<> = Ring + Idempotent<Multiplicative>
@@ -88,3 +91,15 @@ structure!(
         + PartialOrder<LessEq>
         + Monotone<Additive, LessEq>
 );
+structure!(
+    IntegralDomain<> = CommutativeRing
+        + ZeroDivisorFree<Multiplicative, Additive>
+        + NonTrivial<Multiplicative, Additive>
+);
+structure!(
+    /// Schiefkörper: Jedes Element `≠ 0` ist invertierbar.
+    DivisionRing<> = Ring
+        + InverseExceptZero<Multiplicative, Additive>
+        + NonTrivial<Multiplicative, Additive>
+);
+structure!(Field<> = DivisionRing + Commutative<Multiplicative>);

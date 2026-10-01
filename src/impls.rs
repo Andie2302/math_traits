@@ -4,15 +4,15 @@
 //!   `min`/`max` bilden sie einen Verband, mit `<=` eine Totalordnung.
 //!   Monotonie von `+` gilt wegen des Überlaufs *nicht* und wird deshalb auch
 //!   nicht deklariert.
-//! * `bool` mit `xor`/`and` ist der Körper `GF(2)` (hier ein Boolescher
-//!   Integritätsbereich), mit `and`/`or` ein Verband.
+//! * `bool` mit `xor`/`and` ist der Körper `GF(2)`, mit `and`/`or` ein
+//!   Verband.
 //! * `f64` bekommt bewusst keine Gesetze: Gleitkomma-Addition ist nicht
 //!   assoziativ.
 
 use crate::laws;
 use crate::signature::{
-    Additive, BinaryOp, BinaryRelation, HasIdentity, HasInverse, Join, LessEq, Meet,
-    Multiplicative,
+    Additive, BinaryOp, BinaryRelation, HasIdentity, HasInverse, HasPartialInverse, Join, LessEq,
+    Meet, Multiplicative,
 };
 
 macro_rules! wrapping_int {
@@ -57,7 +57,9 @@ macro_rules! wrapping_int {
     )*};
 }
 
-wrapping_int!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize);
+wrapping_int!(
+    i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
+);
 
 impl BinaryOp<Additive> for bool {
     fn op(&self, rhs: &Self) -> Self {
@@ -84,6 +86,11 @@ impl HasIdentity<Multiplicative> for bool {
         true
     }
 }
+impl HasPartialInverse<Multiplicative> for bool {
+    fn try_inverse(&self) -> Option<Self> {
+        self.then_some(true)
+    }
+}
 impl BinaryOp<Meet> for bool {
     fn op(&self, rhs: &Self) -> Self {
         self & rhs
@@ -104,7 +111,7 @@ laws! {
     bool {
         Additive: associative, commutative, identity, inverse, cancellative;
         Multiplicative: associative, commutative, identity, idempotent;
-        [Multiplicative, Additive]: distributive, zero_divisor_free;
+        [Multiplicative, Additive]: distributive, zero_divisor_free, inverse_except_zero, nontrivial;
         Meet: associative, commutative, idempotent;
         Join: associative, commutative, idempotent;
         [Meet, Join]: absorption;

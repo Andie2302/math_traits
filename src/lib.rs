@@ -50,6 +50,7 @@
 //! needs_group::<Z5>();
 //! ```
 
+pub mod derived;
 pub mod impls;
 pub mod laws;
 mod macros;

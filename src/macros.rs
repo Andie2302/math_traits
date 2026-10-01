@@ -91,6 +91,9 @@ macro_rules! __law {
     (absorption; $t:ty; $o:ident, $i:ident) => { $crate::__impl_law!(Absorption; $t; $o, $i); };
     (zero_divisor_free; $t:ty; $m:ident, $a:ident) => { $crate::__impl_law!(ZeroDivisorFree; $t; $m, $a); };
     (anticommutative; $t:ty; $m:ident, $a:ident) => { $crate::__impl_law!(Anticommutative; $t; $m, $a); };
+    (left_inverse_except_zero; $t:ty; $m:ident, $a:ident) => { $crate::__impl_law!(LeftInverseExceptZero; $t; $m, $a); };
+    (right_inverse_except_zero; $t:ty; $m:ident, $a:ident) => { $crate::__impl_law!(RightInverseExceptZero; $t; $m, $a); };
+    (nontrivial; $t:ty; $m:ident, $a:ident) => { $crate::__impl_law!(NonTrivial; $t; $m, $a); };
     (left_monotone; $t:ty; $o:ident, $r:ident) => { $crate::__impl_law!(LeftMonotone; $t; $o, $r); };
     (right_monotone; $t:ty; $o:ident, $r:ident) => { $crate::__impl_law!(RightMonotone; $t; $o, $r); };
 
@@ -130,6 +133,10 @@ macro_rules! __law {
     (distributive; $t:ty; $m:ident, $a:ident) => {
         $crate::__law!(left_distributive; $t; $m, $a);
         $crate::__law!(right_distributive; $t; $m, $a);
+    };
+    (inverse_except_zero; $t:ty; $m:ident, $a:ident) => {
+        $crate::__law!(left_inverse_except_zero; $t; $m, $a);
+        $crate::__law!(right_inverse_except_zero; $t; $m, $a);
     };
     (monotone; $t:ty; $o:ident, $r:ident) => {
         $crate::__law!(left_monotone; $t; $o, $r);
