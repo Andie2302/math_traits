@@ -14,3 +14,6 @@ libm = ["dep:libm"]
 
 [dependencies]
 libm = { version = "0.2", optional = true }
+
+[workspace]
+members = [".", "iapws"]

@@ -320,6 +320,8 @@ pub trait Real:
     + Mul<f64, Output = Self>
     + Div<f64, Output = Self>
 {
+    /// Die Konstante `c` als Element (`c·1`).
+    fn constant(c: f64) -> Self;
     fn exp(&self) -> Self;
     fn ln(&self) -> Self;
     fn sqrt(&self) -> Self;
@@ -339,8 +341,12 @@ where
         + HasExp
         + HasLn
         + HasSqrt
-        + HasSinCos,
+        + HasSinCos
+        + HasIdentity<Multiplicative>,
 {
+    fn constant(c: f64) -> Self {
+        Num::lift(c)
+    }
     fn exp(&self) -> Self {
         Num::exp(self)
     }

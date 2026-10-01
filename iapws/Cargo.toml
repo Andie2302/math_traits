@@ -1,0 +1,8 @@
+[package]
+name = "iapws"
+version = "0.1.0"
+edition = "2024"
+description = "Thermodynamische Zustandsgleichungen der IAPWS, aufgebaut auf math_traits"
+
+[dependencies]
+math_traits = { path = ".." }
