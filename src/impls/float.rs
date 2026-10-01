@@ -18,8 +18,13 @@
 
 use crate::laws;
 use crate::signature::{
-    Additive, BinaryOp, BinaryRelation, HasConjugate, HasExp, HasIdentity, HasInverse, HasLn,
-    HasPartialInverse, HasSinCos, HasSqrt, LessEq, Multiplicative,
+    Additive, BinaryOp, BinaryRelation, HasConjugate, HasIdentity, HasInverse, HasPartialInverse,
+    LessEq, Multiplicative,
+};
+#[cfg(any(feature = "std", feature = "libm"))]
+use {
+    super::fmath::FMath,
+    crate::signature::{HasExp, HasLn, HasSinCos, HasSqrt},
 };
 
 macro_rules! float {
@@ -48,20 +53,6 @@ macro_rules! float {
         impl HasConjugate for $t {
             fn conj(&self) -> Self { *self }
         }
-        impl HasSqrt for $t {
-            fn sqrt(&self) -> Option<Self> { (*self >= 0.0).then(|| <$t>::sqrt(*self)) }
-        }
-        impl HasExp for $t {
-            fn exp(&self) -> Self { <$t>::exp(*self) }
-        }
-        impl HasLn for $t {
-            fn ln(&self) -> Option<Self> { (*self > 0.0).then(|| <$t>::ln(*self)) }
-        }
-        impl HasSinCos for $t {
-            fn sin(&self) -> Self { <$t>::sin(*self) }
-            fn cos(&self) -> Self { <$t>::cos(*self) }
-        }
-
         laws! {
             $t {
                 Additive: associative, commutative, identity, inverse, cancellative, conjugate_additive;
@@ -70,7 +61,35 @@ macro_rules! float {
                 LessEq: total_order;
                 [Additive, LessEq]: monotone;
                 [Multiplicative, Additive, LessEq]: positive_product;
-                Multiplicative: exp_inverts_ln, sqrt_squares, inverse_where_defined;
+                Multiplicative: inverse_where_defined;
+            }
+        }
+    )*};
+}
+
+float!(f32, f64);
+
+/// Elementarfunktionen, nur mit `std` oder `libm`.
+#[cfg(any(feature = "std", feature = "libm"))]
+macro_rules! float_elementary {
+    ($($t:ty),*) => {$(
+        impl HasSqrt for $t {
+            fn sqrt(&self) -> Option<Self> { (*self >= 0.0).then(|| self.m_sqrt()) }
+        }
+        impl HasExp for $t {
+            fn exp(&self) -> Self { self.m_exp() }
+        }
+        impl HasLn for $t {
+            fn ln(&self) -> Option<Self> { (*self > 0.0).then(|| self.m_ln()) }
+        }
+        impl HasSinCos for $t {
+            fn sin(&self) -> Self { self.m_sin() }
+            fn cos(&self) -> Self { self.m_cos() }
+        }
+
+        laws! {
+            $t {
+                Multiplicative: exp_inverts_ln, sqrt_squares;
                 [Additive, Multiplicative]: exp_homomorphism;
                 [Additive, LessEq]: sqrt_of_non_negative;
                 [Multiplicative, Additive]: trigonometric;
@@ -79,4 +98,5 @@ macro_rules! float {
     )*};
 }
 
-float!(f32, f64);
+#[cfg(any(feature = "std", feature = "libm"))]
+float_elementary!(f32, f64);

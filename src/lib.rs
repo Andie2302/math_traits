@@ -50,6 +50,13 @@
 //! needs_group::<Z5>();
 //! ```
 
+#![no_std]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
+
 pub mod autodiff;
 pub mod derived;
 pub mod geometry;
@@ -57,6 +64,7 @@ pub mod impls;
 pub mod laws;
 mod macros;
 pub mod signature;
+#[cfg(feature = "alloc")]
 pub mod solve;
 pub mod structures;
 

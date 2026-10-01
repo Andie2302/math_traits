@@ -10,6 +10,9 @@
 //! * RK4 und Velocity-Verlet: gewöhnliche Differentialgleichungen auf
 //!   beliebigen Modulen, z. B. das n-Körper-Problem.
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 use crate::derived::{sub, try_div};
 use crate::signature::{Additive, BinaryOp, HasIdentity, InnerProduct, Multiplicative, op};
 use crate::structures::{CommutativeRing, EuclideanSpace, Module, OrderedField, RealField};
@@ -119,6 +122,7 @@ where
     add(y, &sum.scale(&sixth_h))
 }
 
+#[cfg(feature = "alloc")]
 /// Ein Schritt Velocity-Verlet für `x'' = a(x)` mit vielen Körpern.
 /// Symplektisch: Die Energie driftet auch über lange Zeiten kaum.
 pub fn verlet_step<V, S>(
@@ -152,6 +156,7 @@ where
     (x1, v1)
 }
 
+#[cfg(feature = "alloc")]
 /// Gravitationsbeschleunigung `aᵢ = Σⱼ G·mⱼ·(xⱼ − xᵢ) / ‖xⱼ − xᵢ‖³`.
 pub fn gravity<V, S>(positions: &[V], masses: &[S], g: &S) -> Vec<V>
 where
@@ -178,6 +183,7 @@ where
         .collect()
 }
 
+#[cfg(feature = "alloc")]
 /// Gesamtenergie `Σ ½·mᵢ·‖vᵢ‖² − Σᵢ<ⱼ G·mᵢ·mⱼ / ‖xᵢ − xⱼ‖` (zum Prüfen der
 /// Energieerhaltung).
 pub fn energy<V, S>(positions: &[V], velocities: &[V], masses: &[S], g: &S) -> S

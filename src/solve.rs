@@ -9,6 +9,8 @@
 //! * [`solve_linear_pivoting`], [`bisect`] und [`newton`] brauchen ein
 //!   [`OrderedField`], weil sie Beträge vergleichen.
 
+use alloc::vec::Vec;
+
 use crate::derived::{abs, sub, try_div};
 use crate::signature::{Additive, HasIdentity, Multiplicative, op};
 use crate::structures::{Field, OrderedField};

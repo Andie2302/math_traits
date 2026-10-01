@@ -23,8 +23,13 @@
 
 use crate::laws;
 use crate::signature::{
-    Additive, BinaryOp, HasConjugate, HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse,
-    HasSinCos, HasSqrt, Multiplicative, op,
+    Additive, BinaryOp, HasConjugate, HasIdentity, HasInverse, HasPartialInverse, Multiplicative,
+    op,
+};
+#[cfg(any(feature = "std", feature = "libm"))]
+use {
+    super::fmath::FMath,
+    crate::signature::{HasExp, HasLn, HasSinCos, HasSqrt},
 };
 
 /// Ein Element `(re, im)` der Cayley-Dickson-Verdopplung von `T`.
@@ -163,42 +168,43 @@ cayley_dickson_laws!(f32, f64, i8, i16, i32, i64, i128, isize);
 cayley_dickson_field_laws!(f32, f64);
 
 /// Elementarfunktionen auf ℂ für `f32`/`f64` (Hauptzweige).
+#[cfg(any(feature = "std", feature = "libm"))]
 macro_rules! complex_elementary {
     ($($b:ty),*) => {$(
         impl HasExp for Complex<$b> {
             /// `exp(a + bi) = eᵃ (cos b + i sin b)`
             fn exp(&self) -> Self {
-                let r = <$b>::exp(self.re);
-                Complex::new(r * <$b>::cos(self.im), r * <$b>::sin(self.im))
+                let r = <$b as FMath>::m_exp(self.re);
+                Complex::new(r * <$b as FMath>::m_cos(self.im), r * <$b as FMath>::m_sin(self.im))
             }
         }
         impl HasLn for Complex<$b> {
             /// `ln z = ln|z| + i·arg z` mit `arg z ∈ (−π, π]`, `None` für `z = 0`.
             fn ln(&self) -> Option<Self> {
-                let r = <$b>::hypot(self.re, self.im);
-                (r > 0.0).then(|| Complex::new(<$b>::ln(r), <$b>::atan2(self.im, self.re)))
+                let r = <$b as FMath>::m_hypot(self.re, self.im);
+                (r > 0.0).then(|| Complex::new(<$b as FMath>::m_ln(r), <$b as FMath>::m_atan2(self.im, self.re)))
             }
         }
         impl HasSqrt for Complex<$b> {
             /// Hauptwurzel mit `Re ≥ 0`. Auf ℂ überall definiert.
             fn sqrt(&self) -> Option<Self> {
-                let r = <$b>::hypot(self.re, self.im);
-                let re = <$b>::sqrt((r + self.re) / 2.0);
-                let im = <$b>::sqrt((r - self.re) / 2.0);
+                let r = <$b as FMath>::m_hypot(self.re, self.im);
+                let re = <$b as FMath>::m_sqrt((r + self.re) / 2.0);
+                let im = <$b as FMath>::m_sqrt((r - self.re) / 2.0);
                 Some(Complex::new(re, if self.im < 0.0 { -im } else { im }))
             }
         }
         impl HasSinCos for Complex<$b> {
             fn sin(&self) -> Self {
                 Complex::new(
-                    <$b>::sin(self.re) * <$b>::cosh(self.im),
-                    <$b>::cos(self.re) * <$b>::sinh(self.im),
+                    <$b as FMath>::m_sin(self.re) * <$b as FMath>::m_cosh(self.im),
+                    <$b as FMath>::m_cos(self.re) * <$b as FMath>::m_sinh(self.im),
                 )
             }
             fn cos(&self) -> Self {
                 Complex::new(
-                    <$b>::cos(self.re) * <$b>::cosh(self.im),
-                    -<$b>::sin(self.re) * <$b>::sinh(self.im),
+                    <$b as FMath>::m_cos(self.re) * <$b as FMath>::m_cosh(self.im),
+                    -<$b as FMath>::m_sin(self.re) * <$b as FMath>::m_sinh(self.im),
                 )
             }
         }
@@ -212,4 +218,5 @@ macro_rules! complex_elementary {
     )*};
 }
 
+#[cfg(any(feature = "std", feature = "libm"))]
 complex_elementary!(f32, f64);

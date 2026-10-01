@@ -15,9 +15,14 @@
 //! erste Ableitung, mit `T = Dual<Dual<f64>>` die zweite.
 
 pub use crate::impls::dual::Dual;
-use crate::signature::{Additive, HasIdentity, Multiplicative};
+use crate::signature::{HasIdentity, Multiplicative};
+#[cfg(feature = "alloc")]
 use crate::solve::newton;
-use crate::structures::{CommutativeRing, OrderedField};
+use crate::structures::CommutativeRing;
+#[cfg(feature = "alloc")]
+use crate::structures::OrderedField;
+#[cfg(feature = "alloc")]
+use alloc::{vec, vec::Vec};
 
 /// `(f(x), f'(x))`
 pub fn derivative<T: CommutativeRing>(f: impl Fn(&Dual<T>) -> Dual<T>, x: T) -> (T, T) {
@@ -38,6 +43,7 @@ pub fn second_derivative<T: CommutativeRing>(
     (y.re.re, y.re.eps, y.eps.eps)
 }
 
+#[cfg(feature = "alloc")]
 /// `(F(x), J(x))` für `F: Tⁿ → Tᵐ`, mit `n` Auswertungen von `F`.
 pub fn jacobian<T: CommutativeRing + Clone>(
     f: impl Fn(&[Dual<T>]) -> Vec<Dual<T>>,
@@ -73,6 +79,7 @@ pub fn jacobian<T: CommutativeRing + Clone>(
     (values, rows)
 }
 
+#[cfg(feature = "alloc")]
 /// `(f(x), ∇f(x))` für `f: Tⁿ → T`.
 pub fn gradient<T: CommutativeRing + Clone>(
     f: impl Fn(&[Dual<T>]) -> Dual<T>,
@@ -81,11 +88,12 @@ pub fn gradient<T: CommutativeRing + Clone>(
     let (mut v, j) = jacobian(|x| vec![f(x)], x);
     let value = v
         .pop()
-        .unwrap_or_else(<T as HasIdentity<Additive>>::identity);
+        .unwrap_or_else(<T as HasIdentity<crate::signature::Additive>>::identity);
     let grad = j.into_iter().next().unwrap_or_default();
     (value, grad)
 }
 
+#[cfg(feature = "alloc")]
 /// Newton-Verfahren, bei dem die Jacobi-Matrix per AutoDiff entsteht.
 pub fn newton_autodiff<T>(
     f: impl Fn(&[Dual<T>]) -> Vec<Dual<T>>,

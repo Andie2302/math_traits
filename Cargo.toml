@@ -3,4 +3,14 @@ name = "math_traits"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["std"]
+# Standardbibliothek: Gleitkomma-Elementarfunktionen aus `std`, impliziert `alloc`.
+std = ["alloc"]
+# Heap: `Vec`-basierte Löser, dynamischer Tensor, Jacobi-Matrizen per AutoDiff.
+alloc = []
+# Elementarfunktionen für `f32`/`f64` ohne `std` (über das Crate `libm`).
+libm = ["dep:libm"]
+
 [dependencies]
+libm = { version = "0.2", optional = true }
