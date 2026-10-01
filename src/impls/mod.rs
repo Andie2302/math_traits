@@ -14,7 +14,7 @@ pub mod cayley_dickson;
 pub mod dual;
 pub mod float;
 #[cfg(any(feature = "std", feature = "libm"))]
-mod fmath;
+pub(crate) mod fmath;
 pub mod vector;
 
 use crate::laws;

@@ -6,7 +6,7 @@
 //! So kann oberhalb der Basis kein neues Axiom entstehen.
 
 use crate::laws::*;
-use crate::signature::{Additive, Join, LessEq, Meet, Multiplicative};
+use crate::signature::{Additive, Bracket, Join, LessEq, Meet, Multiplicative};
 
 macro_rules! structure {
     ($(#[$m:meta])* $name:ident<$($p:ident),*> = $($bound:tt)+) => {
@@ -175,4 +175,31 @@ structure!(
     /// definit, also `‖v‖ = sqrt(⟨v, v⟩)` eine Norm. Wie bei [`Module`]
     /// schreibt man bei Bedarf `S: RealField` dazu.
     EuclideanSpace<S> = InnerProductSpace<S> + InnerNonNegative<S, LessEq> + InnerDefinite<S>
+);
+structure!(
+    /// Kontraktion, die in beiden Argumenten linear ist.
+    BilinearContract<B, S> = ContractLeftDistributive<B>
+        + ContractRightDistributive<B>
+        + ContractHomogeneous<B, S>
+);
+structure!(
+    /// Algebra über `S`: Modul mit bilinearem Produkt (nicht unbedingt
+    /// assoziativ). Oktonionen und Sedenionen sind Algebren über ℝ.
+    Algebra<S> = Module<S>
+        + Distributive<Multiplicative, Additive>
+        + OpHomogeneous<Multiplicative, S>
+);
+structure!(
+    /// Assoziative Algebra mit Eins, z. B. quadratische Matrizen über einem
+    /// kommutativen Ring.
+    AssociativeAlgebra<S> = Algebra<S> + Ring
+);
+structure!(
+    /// Lie-Algebra: bilineare, alternierende Klammer mit Jacobi-Identität.
+    /// Beispiele: ℝ³ mit dem Kreuzprodukt (so(3)), Matrizen mit `[A, B] = AB − BA`.
+    LieAlgebra<S> = Module<S>
+        + Distributive<Bracket, Additive>
+        + OpHomogeneous<Bracket, S>
+        + Alternating<Bracket, Additive>
+        + Jacobi<Bracket, Additive>
 );

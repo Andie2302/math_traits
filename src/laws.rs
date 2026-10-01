@@ -13,12 +13,12 @@
 //! Das Schlüsselwort im Makro bleibt gleich.
 
 use crate::__private::Token;
-use crate::signature::HasRootsOfUnity;
 use crate::signature::{
     Additive, BinaryOp, BinaryRelation, HasAbsorbing, HasConjugate, HasDivRem, HasEuclideanSize,
     HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse, HasSinCos, HasSqrt, InnerProduct,
     Multiplicative, ScalarMul, op,
 };
+use crate::signature::{Contract, ExpMap, HasRootsOfUnity, Outer, TryBinaryOp};
 
 // ===========================================================================
 // 1. Ausgezeichnete Elemente
@@ -745,5 +745,201 @@ pub trait PrimitiveRootOfUnity<Mul>: HasRootsOfUnity + HasIdentity<Mul> {
             p = op::<Mul, _>(&p, &w);
         }
         n > 0 && p == one
+    }
+}
+
+// ===========================================================================
+// 14. Kontraktion und Tensorprodukt (Typen A × B → C)
+// ===========================================================================
+
+/// `(a · b) · c = a · (b · c)` über drei Typen.
+pub trait ContractAssociative<B, C>: Contract<B> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds<Out>(a: &Self, b: &B, c: &C) -> bool
+    where
+        <Self as Contract<B>>::Output: Contract<C, Output = Out>,
+        B: Contract<C>,
+        Self: Contract<<B as Contract<C>>::Output, Output = Out>,
+        Out: PartialEq,
+    {
+        a.contract(b).contract(c) == a.contract(&b.contract(c))
+    }
+}
+
+/// `a · (b + b') = a · b + a · b'`
+pub trait ContractLeftDistributive<B>: Contract<B> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(a: &Self, b: &B, b2: &B) -> bool
+    where
+        B: BinaryOp<Additive>,
+        Self::Output: BinaryOp<Additive> + PartialEq,
+    {
+        a.contract(&op::<Additive, _>(b, b2)) == op::<Additive, _>(&a.contract(b), &a.contract(b2))
+    }
+}
+
+/// `(a + a') · b = a · b + a' · b`
+pub trait ContractRightDistributive<B>: Contract<B> + BinaryOp<Additive> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(a: &Self, a2: &Self, b: &B) -> bool
+    where
+        Self::Output: BinaryOp<Additive> + PartialEq,
+    {
+        op::<Additive, _>(a, a2).contract(b) == op::<Additive, _>(&a.contract(b), &a2.contract(b))
+    }
+}
+
+/// `(s·a) · b = s·(a · b) = a · (s·b)`
+pub trait ContractHomogeneous<B, S>: Contract<B> + ScalarMul<S> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(s: &S, a: &Self, b: &B) -> bool
+    where
+        B: ScalarMul<S>,
+        Self::Output: ScalarMul<S> + PartialEq,
+    {
+        let ab = a.contract(b).scale(s);
+        a.scale(s).contract(b) == ab && a.contract(&b.scale(s)) == ab
+    }
+}
+
+/// `(a ⊗ b) ⊗ c = a ⊗ (b ⊗ c)` über drei Typen.
+pub trait OuterAssociative<B, C>: Outer<B> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds<Out>(a: &Self, b: &B, c: &C) -> bool
+    where
+        <Self as Outer<B>>::Output: Outer<C, Output = Out>,
+        B: Outer<C>,
+        Self: Outer<<B as Outer<C>>::Output, Output = Out>,
+        Out: PartialEq,
+    {
+        a.outer(b).outer(c) == a.outer(&b.outer(c))
+    }
+}
+
+/// `a ⊗ (b + b') = a ⊗ b + a ⊗ b'`
+pub trait OuterLeftDistributive<B>: Outer<B> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(a: &Self, b: &B, b2: &B) -> bool
+    where
+        B: BinaryOp<Additive>,
+        Self::Output: BinaryOp<Additive> + PartialEq,
+    {
+        a.outer(&op::<Additive, _>(b, b2)) == op::<Additive, _>(&a.outer(b), &a.outer(b2))
+    }
+}
+
+/// `(a + a') ⊗ b = a ⊗ b + a' ⊗ b`
+pub trait OuterRightDistributive<B>: Outer<B> + BinaryOp<Additive> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(a: &Self, a2: &Self, b: &B) -> bool
+    where
+        Self::Output: BinaryOp<Additive> + PartialEq,
+    {
+        op::<Additive, _>(a, a2).outer(b) == op::<Additive, _>(&a.outer(b), &a2.outer(b))
+    }
+}
+
+// ===========================================================================
+// 15. Algebren und Lie-Algebren
+// ===========================================================================
+
+/// `(s·x) • y = s·(x • y) = x • (s·y)`: Skalare vertauschen mit dem Produkt.
+pub trait OpHomogeneous<Op, S>: BinaryOp<Op> + ScalarMul<S> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(s: &S, x: &Self, y: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        let xy = op::<Op, _>(x, y).scale(s);
+        op::<Op, _>(&x.scale(s), y) == xy && op::<Op, _>(x, &y.scale(s)) == xy
+    }
+}
+
+/// `x • x = 0` (stärker als Antikommutativität, wenn `2` nicht invertierbar ist)
+pub trait Alternating<Op, Add>: BinaryOp<Op> + HasIdentity<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        op::<Op, _>(x, x) == <Self as HasIdentity<Add>>::identity()
+    }
+}
+
+/// Jacobi-Identität `x•(y•z) + y•(z•x) + z•(x•y) = 0`
+pub trait Jacobi<Op, Add>: BinaryOp<Op> + HasIdentity<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self, y: &Self, z: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        let a = op::<Op, _>(x, &op::<Op, _>(y, z));
+        let b = op::<Op, _>(y, &op::<Op, _>(z, x));
+        let c = op::<Op, _>(z, &op::<Op, _>(x, y));
+        op::<Add, _>(&op::<Add, _>(&a, &b), &c) == <Self as HasIdentity<Add>>::identity()
+    }
+}
+
+/// `exp(0) = 1`: Die Exponentialabbildung trifft das Einselement der Gruppe.
+pub trait ExpMapZero<G>: ExpMap<G> + HasIdentity<Additive> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds() -> bool
+    where
+        G: HasIdentity<Multiplicative> + PartialEq,
+    {
+        Self::identity().exp_map() == G::identity()
+    }
+}
+
+/// `exp(−x) · exp(x) = 1`
+pub trait ExpMapNegation<G>: ExpMap<G> + HasInverse<Additive> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        G: BinaryOp<Multiplicative> + HasIdentity<Multiplicative> + PartialEq,
+    {
+        op::<Multiplicative, _>(&x.inverse().exp_map(), &x.exp_map()) == G::identity()
+    }
+}
+
+// ===========================================================================
+// 16. Partielle Operationen
+// ===========================================================================
+
+/// Wenn beide Seiten definiert sind: `(a•b)•c = a•(b•c)`
+pub trait PartialAssociative<Op>: TryBinaryOp<Op> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(a: &Self, b: &Self, c: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        let l = a.try_op(b).and_then(|ab| ab.try_op(c));
+        let r = b.try_op(c).and_then(|bc| a.try_op(&bc));
+        l.is_none() || r.is_none() || l == r
+    }
+}
+
+/// `a•b` ist genau dann definiert, wenn `b•a` es ist, und dann gleich.
+pub trait PartialCommutative<Op>: TryBinaryOp<Op> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(a: &Self, b: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        a.try_op(b) == b.try_op(a)
     }
 }

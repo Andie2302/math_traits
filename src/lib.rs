@@ -68,6 +68,7 @@ pub mod signature;
 #[cfg(feature = "alloc")]
 pub mod solve;
 pub mod structures;
+pub mod tensor;
 
 /// Interna für das [`laws!`]-Makro. Nicht direkt verwenden.
 #[doc(hidden)]

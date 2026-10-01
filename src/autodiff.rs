@@ -112,3 +112,43 @@ where
         max_iter,
     )
 }
+
+/// `(F(x), J(x))` für `F: Tᴺ → Tᴹ` mit festen Größen, ohne Heap.
+pub fn jacobian_fixed<T, const M: usize, const N: usize>(
+    f: impl Fn(&crate::tensor::Tensor1<Dual<T>, N>) -> crate::tensor::Tensor1<Dual<T>, M>,
+    x: &crate::tensor::Tensor1<T, N>,
+) -> (
+    crate::tensor::Tensor1<T, M>,
+    crate::tensor::Tensor2<T, M, N>,
+)
+where
+    T: CommutativeRing + Clone,
+{
+    use crate::tensor::{Tensor1, Tensor2};
+    let columns: [Tensor1<Dual<T>, M>; N] = core::array::from_fn(|j| {
+        f(&Tensor1(core::array::from_fn(|k| {
+            if k == j {
+                Dual::variable(x.0[k].clone())
+            } else {
+                Dual::constant(x.0[k].clone())
+            }
+        })))
+    });
+    let values = Tensor1(core::array::from_fn(|i| {
+        columns.first().map_or_else(
+            || {
+                f(&Tensor1(core::array::from_fn(|k| {
+                    Dual::constant(x.0[k].clone())
+                })))
+                .0[i]
+                    .re
+                    .clone()
+            },
+            |c| c.0[i].re.clone(),
+        )
+    }));
+    let jac = Tensor2(core::array::from_fn(|i| {
+        core::array::from_fn(|j| columns[j].0[i].eps.clone())
+    }));
+    (values, jac)
+}

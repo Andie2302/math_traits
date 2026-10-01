@@ -116,6 +116,14 @@ macro_rules! __law {
     (inner_conjugate_symmetric; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerConjugateSymmetric; $g $t; $a); };
     (inner_definite; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerDefinite; $g $t; $a); };
     (primitive_root_of_unity; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(PrimitiveRootOfUnity; $g $t; $a); };
+    (contract_left_distributive; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ContractLeftDistributive; $g $t; $a); };
+    (contract_right_distributive; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ContractRightDistributive; $g $t; $a); };
+    (outer_left_distributive; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(OuterLeftDistributive; $g $t; $a); };
+    (outer_right_distributive; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(OuterRightDistributive; $g $t; $a); };
+    (exp_map_zero; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ExpMapZero; $g $t; $a); };
+    (exp_map_negation; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ExpMapNegation; $g $t; $a); };
+    (partial_associative; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(PartialAssociative; $g $t; $a); };
+    (partial_commutative; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(PartialCommutative; $g $t; $a); };
     // --- Atome: zwei Parameter -------------------------------------------------
     (left_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(LeftDistributive; $g $t; $a, $b); };
     (right_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(RightDistributive; $g $t; $a, $b); };
@@ -135,6 +143,12 @@ macro_rules! __law {
     (sine_addition; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(SineAddition; $g $t; $a, $b); };
     (cosine_addition; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(CosineAddition; $g $t; $a, $b); };
     (inner_non_negative; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(InnerNonNegative; $g $t; $a, $b); };
+    (contract_associative; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(ContractAssociative; $g $t; $a, $b); };
+    (contract_homogeneous; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(ContractHomogeneous; $g $t; $a, $b); };
+    (outer_associative; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(OuterAssociative; $g $t; $a, $b); };
+    (op_homogeneous; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(OpHomogeneous; $g $t; $a, $b); };
+    (alternating; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(Alternating; $g $t; $a, $b); };
+    (jacobi; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(Jacobi; $g $t; $a, $b); };
     // --- Atome: drei Parameter -------------------------------------------------
     (positive_product; $g:tt $t:ty; $a:ty, $b:ty, $c:ty) => { $crate::__impl_law!(PositiveProduct; $g $t; $a, $b, $c); };
     // --- Zusammengesetzte Schlüsselwörter --------------------------------------
@@ -205,6 +219,19 @@ macro_rules! __law {
         $crate::__law!(inner_additive; $g $t; $a);
         $crate::__law!(inner_homogeneous; $g $t; $a);
         $crate::__law!(inner_conjugate_symmetric; $g $t; $a);
+    };
+    (contract_bilinear; $g:tt $t:ty; $a:ty) => {
+        $crate::__law!(contract_left_distributive; $g $t; $a);
+        $crate::__law!(contract_right_distributive; $g $t; $a);
+    };
+    (outer_bilinear; $g:tt $t:ty; $a:ty) => {
+        $crate::__law!(outer_left_distributive; $g $t; $a);
+        $crate::__law!(outer_right_distributive; $g $t; $a);
+    };
+    (lie_bracket; $g:tt $t:ty; $a:ty, $b:ty) => {
+        $crate::__law!(distributive; $g $t; $a, $b);
+        $crate::__law!(alternating; $g $t; $a, $b);
+        $crate::__law!(jacobi; $g $t; $a, $b);
     };
     // --- Unbekannt -------------------------------------------------------------
     ($law:ident; $($rest:tt)*) => {

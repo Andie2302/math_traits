@@ -44,8 +44,14 @@ jederzeit möglich.
 | AutoDiff vorwärts, 1. und 2. Ableitung, Jacobi | erreicht | duale Zahlen; Gesetz `InverseWhereDefined` |
 | Skalarprodukt, Norm als Folgerung | erreicht | **Signatur** `InnerProduct<S>`; Gesetze `ConjugateAdditive`, `SelfConjugate` |
 | CG-Löser, RK4, Velocity-Verlet, Gravitation | erreicht | `EuclideanSpace` / `Module` |
-| Einheitswurzeln (FFT) | **offen (Schritt 3)** | **Signatur** primitive n-te Einheitswurzel |
-| Algebra (Skalare vertauschen mit Produkt) | offen | nur ein Gesetz |
+| Einheitswurzeln, FFT 1D/2D/3D, Faltung | erreicht | **Signatur** `HasRootsOfUnity` |
+| Algebra (Skalare vertauschen mit Produkt) | erreicht | Gesetz `OpHomogeneous` |
+| Tensoren Stufe 1–4, Matrix·Matrix, Matrix·Vektor, ⊗ | erreicht | **Signatur** `Contract<B>`, `Outer<B>` (Typen `A × B → C`) |
+| Quadratische Matrizen als Ring / Algebra | erreicht | nur Gesetze |
+| Determinante, LU, Inverse, QR, Eigenwerte (symmetrisch) | erreicht | `Field` / `OrderedField` / `RealField` |
+| Lie-Algebren (so(3), gl(n)), Drehungen per `exp` | erreicht | Marker `Bracket`; Gesetze `Alternating`, `Jacobi`; **Signatur** `ExpMap<G>` |
+| Dynamischer Tensor (`alloc`) | erreicht | **Signatur** `TryBinaryOp`, `TryContract` (partielle Operationen) |
+| `no_std` mit `alloc`/`libm` | erreicht | nur Infrastruktur |
 
 ### Projekte
 
@@ -54,53 +60,45 @@ jederzeit möglich.
 | IAPWS-95/06/10, trockene Luft | **ja** | nur Implementierung (Formeln, Koeffizienten) |
 | Droste-Effekt („Logarithmus eines Bildes“) | **ja** | nur Implementierung (Bild-Abtastung) |
 | 2-/3-Körper-Problem | **ja** | erledigt bis auf Animation (Grafik-Crate) |
-| Navier-Stokes | **ja**, für spektrale Verfahren nach Schritt 3 | Gitter, Operatoren (Implementierung) |
-| FFT 1D/2D/3D | nein | Schritt 3 |
-| Neuronale Netze | nach Schritt 3 | Rückwärts-AutoDiff (Implementierung); siehe „Grenzen“ |
+| Navier-Stokes | **ja** | Gitter, Operatoren (Implementierung) |
+| FFT 1D/2D/3D | **ja** | erledigt |
+| Neuronale Netze | **ja** | Layer, Rückwärts-AutoDiff, Adam (Implementierung) |
 
-Es bleibt **eine Signatur-Erweiterung**: Einheitswurzeln. Danach braucht kein Projekt der Liste mehr eine neue
-Signatur. Das ist der Punkt, an dem du zu den Implementierungen wechselst.
+**Kein Projekt der Liste braucht mehr eine neue Signatur.** Nach dem
+Kriterium oben ist die Basis damit für diese Ziele abgeschlossen. Ab hier geht
+es um Implementierungen.
 
-Was bewusst **nicht** in die Basis gehört: Tensoren, Matrizen, Gitter und
-Berechnungsgraphen (Datentypen, die Strukturen *erfüllen*), Zufall
+Was bewusst **nicht** in die Basis gehört: Gitter und Berechnungsgraphen
+(Datentypen, die Strukturen *erfüllen*), Zufall
 (`rand`-Crate), physikalische Einheiten (z. B. `uom`) und die Vollständigkeit
 von ℝ (nur für Beweise nötig).
 
 ## Grenzen der Signatur
 
-Alle Signaturen bisher haben eine von drei Formen: `Self × Self → Self`
-(Operationen), `S × V → V` (externe Operation) und `V × V → S`
-(Skalarprodukt). Dazu kommen Konstanten und partielle Funktionen per
-`Option`. Folgendes passt in **keine** dieser Formen:
+Die Signatur kennt jetzt diese Formen:
 
-1. **Operationen zwischen drei verschiedenen Typen** `A × B → C`, etwa
-   Matrix `m×n` mal Matrix `n×k` ergibt `m×k`, oder Tensor-Kontraktionen.
-   Das betrifft *neuronale Netze*, sobald man Layer generisch verketten will.
-   Lösung: eine heterogene Signatur `Compose<B, Output = C>` plus
-   Gesetze für die Assoziativität über drei Typen (mathematisch: eine
-   *Kategorie*).
-2. **Abbildungen zwischen Strukturen** als eigene Objekte: lineare
-   Abbildungen, Homomorphismen, `exp` von einer Lie-Algebra in eine Gruppe
-   (z. B. Rotationsvektor → Quaternion). Bisher sind Abbildungen nur
-   Closures, und Closures kann man keine Gesetze deklarieren.
-3. **Formen, die erst zur Laufzeit feststehen:** ein `Vec`-Tensor, dessen
-   Dimension erst beim Lesen einer Datei klar ist. Dann kann auch `+`
-   scheitern (verschiedene Formen), und `BinaryOp` ist total. Solange die
-   Größen als `const N` im Typ stehen, gibt es das Problem nicht.
-4. **Unendliche Objekte:** Grenzwerte, exakte reelle Zahlen, Potenzreihen,
-   Maße und Wahrscheinlichkeit (σ-Algebren), Topologie (offene Mengen),
-   Mannigfaltigkeiten mit Tangentialräumen, die von Punkt zu Punkt variieren.
-   Das sprengt nicht nur die Signatur, sondern endliche Darstellung
-   überhaupt. Im Code arbeitet man dann mit Näherungen, die wieder in die
-   bestehende Signatur passen.
-5. **Grenzen von Rust selbst:** Strukturen über Containern (`Vec<T> →
+| Form | Beispiele |
+|---|---|
+| `Self × Self → Self` | `+`, `·`, `∧`, `∨`, Lie-Klammer |
+| `S × V → V` | Skalar mal Vektor, Quaternion dreht Vektor |
+| `V × V → S` | Skalarprodukt |
+| `A × B → C` | Kontraktion, Tensorprodukt |
+| `A → B` | Exponentialabbildung Lie-Algebra → Gruppe |
+| partiell (`Option`) | Inverse, `ln`, `sqrt`, Operationen auf dynamischen Tensoren |
+
+Was weiterhin **nicht** hineinpasst:
+
+1. **Unendliche Objekte:** Grenzwerte, exakte reelle Zahlen, Potenzreihen,
+   Maße und Wahrscheinlichkeit (σ-Algebren), Topologie, Mannigfaltigkeiten
+   mit Tangentialräumen, die von Punkt zu Punkt variieren. Im Code arbeitet
+   man mit Näherungen, die wieder in die bestehende Signatur passen.
+2. **Grenzen von Rust selbst:** Strukturen über Containern (`Vec<T> →
    Vec<U>`, Funktoren, Monaden) brauchen Typkonstruktoren als Parameter.
-   Das gibt es in Rust nur eingeschränkt (GATs).
-
-Von deiner Projektliste berührt nur Punkt 1 etwas: neuronale Netze mit
-verschieden großen Layern. Dort reicht aber zunächst eine konkrete
-Matrix-Implementierung. Die Signatur braucht man erst, wenn man *generische*
-Algorithmen über beliebige Layer-Typen schreiben will.
+   Die gibt es in Rust nur eingeschränkt (GATs).
+3. **Abbildungen als Objekte mit Gesetzen** (lineare Abbildungen,
+   Homomorphismen als eigene Typen): Matrizen decken den linearen Fall ab.
+   Für allgemeine Abbildungen bleibt es bei Closures, und Closures kann man
+   keine Gesetze deklarieren.
 
 ## Bekannte Lücke: Folgerungen zwischen Gesetzen
 

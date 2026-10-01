@@ -145,3 +145,46 @@ pub trait InnerProduct<S> {
 pub trait HasRootsOfUnity: Sized {
     fn primitive_root_of_unity(n: usize) -> Option<Self>;
 }
+
+// ===========================================================================
+// Operationen zwischen verschiedenen Typen (Tensoren)
+// ===========================================================================
+
+/// Kontraktion `A · B`: Der **letzte** Index von `A` wird mit dem **ersten**
+/// Index von `B` summiert. Das deckt Matrix·Matrix, Matrix·Vektor, Vektor·Matrix,
+/// Skalarprodukt ohne Konjugation und alle höheren Fälle ab.
+pub trait Contract<Rhs> {
+    type Output;
+    fn contract(&self, rhs: &Rhs) -> Self::Output;
+}
+
+/// Tensorprodukt `A ⊗ B`: Die Stufen addieren sich, `(A ⊗ B)[i…, j…] = A[i…]·B[j…]`.
+pub trait Outer<Rhs> {
+    type Output;
+    fn outer(&self, rhs: &Rhs) -> Self::Output;
+}
+
+/// Marker: Lie-Klammer `[x, y]`.
+pub enum Bracket {}
+
+/// Exponentialabbildung `exp: 𝔤 → G` von einer Lie-Algebra in ihre Gruppe,
+/// z. B. Drehvektor → Einheitsquaternion.
+pub trait ExpMap<G> {
+    fn exp_map(&self) -> G;
+}
+
+// ===========================================================================
+// Partielle Operationen (Formen erst zur Laufzeit bekannt)
+// ===========================================================================
+
+/// Eine Operation, die scheitern kann, z. B. `+` auf Tensoren
+/// unterschiedlicher Form.
+pub trait TryBinaryOp<Op>: Sized {
+    fn try_op(&self, rhs: &Self) -> Option<Self>;
+}
+
+/// Kontraktion, die scheitern kann (Formen passen nicht).
+pub trait TryContract<Rhs> {
+    type Output;
+    fn try_contract(&self, rhs: &Rhs) -> Option<Self::Output>;
+}

@@ -14,6 +14,7 @@ use math_traits::impls::cayley_dickson::*;
 use math_traits::signature::*;
 use math_traits::solve::*;
 use math_traits::structures::*;
+use math_traits::tensor::*;
 
 // --- Strukturen -----------------------------------------------------------
 
@@ -37,7 +38,9 @@ fn elementary_ring<T: ElementaryRing>() {}
 fn real_field<T: RealField>() {}
 fn inner_product_space<V: InnerProductSpace<S>, S>() {}
 fn euclidean_space<V: EuclideanSpace<S>, S: RealField>() {}
-// OFFEN: Einheitswurzeln – Signatur für FFT (Schritt 3)
+fn lie_algebra<L: LieAlgebra<S>, S: CommutativeRing>() {}
+fn associative_algebra<A: AssociativeAlgebra<S>, S>() {}
+fn bilinear_contract<A: BilinearContract<B, S>, B, S>() {}
 
 // --- Cayley-Dickson bis zu den Sedenionen --------------------------------
 
@@ -51,6 +54,16 @@ fn cayley_dickson_tower() {
     euclidean_ring::<i64>();
     vector_space::<[f64; 3], f64>();
     module::<[i64; 4], i64>();
+}
+
+#[test]
+fn tensors_and_lie() {
+    ring::<SquareMatrix<f64, 3>>();
+    associative_algebra::<SquareMatrix<f64, 3>, f64>();
+    euclidean_space::<Matrix<f64, 2, 3>, f64>();
+    bilinear_contract::<Matrix<f64, 2, 3>, Matrix<f64, 3, 4>, f64>();
+    lie_algebra::<Vector<f64, 3>, f64>();
+    lie_algebra::<SquareMatrix<f64, 3>, f64>();
 }
 
 #[test]
@@ -139,19 +152,32 @@ fn n_body<V: EuclideanSpace<S>, S: RealField>(
 ) -> (Vec<V>, Vec<V>) {
     verlet_step(|p| gravity(p, m, g), x, v, h)
 }
+fn fourier<T: Field + HasRootsOfUnity + Clone>(x: &mut [T], shape: &[usize]) -> Option<()> {
+    math_traits::fft::fft_nd(x, shape)?;
+    math_traits::fft::ifft_nd(x, shape)
+}
+fn determinant<T: Field + PartialEq + Clone, const N: usize>(a: &SquareMatrix<T, N>) -> T {
+    math_traits::tensor::matrix::det(a)
+}
+fn eigen<T: RealField + PartialEq + Clone, const N: usize>(
+    a: &SquareMatrix<T, N>,
+    tol: &T,
+) -> bool {
+    math_traits::tensor::matrix::eigen_symmetric(a, tol, 100).is_some()
+}
+// OFFEN: Schur-Zerlegung allgemeiner Matrizen – Basis bereit (Complex<T: RealField>),
+//        fehlt nur Implementierung
 // OFFEN: Polynomauswertung (Horner) – geht schon mit `Ring`, fehlt nur als Funktion
 
 // --- Projekte ---------------------------------------------------------------
 //
 // OFFEN: IAPWS-95/06/10, trockene Luft – Basis vollständig (RealField + AutoDiff),
 //        fehlt nur Implementierung
-// OFFEN: Neuronale Netze (Layer, Backprop, Adam, Dropout, Faltung)
-//        – Faltung über FFT (Schritt 3), Rückwärts-AutoDiff (Implementierung);
-//          Layer verschiedener Größe: siehe BASIS.md, „Grenzen der Signatur“
+// OFFEN: Neuronale Netze – Basis bereit (Tensoren, Contract, FFT-Faltung, tanh/σ);
+//        fehlt Implementierung (Layer, Rückwärts-AutoDiff, Adam, Dropout)
 // ERREICHT: 2-/3-Körper-Problem – `n_body` oben, Achter-Bahn in tests/geometry.rs
-// OFFEN: Navier-Stokes – Basis bereit bis auf evtl. FFT (Schritt 3);
-//        Gitter und Operatoren sind Implementierung
-// OFFEN: FFT 1D/2D/3D – braucht Einheitswurzeln (Schritt 3)
+// OFFEN: Navier-Stokes – Basis bereit; Gitter und Operatoren sind Implementierung
+// ERREICHT: FFT 1D/2D/3D – `fourier` oben, tests/fft.rs
 // OFFEN: Droste-Effekt („Logarithmus eines Bildes“) – Basis vollständig
 //        (komplexes exp/ln), fehlt nur Implementierung
 
