@@ -15,11 +15,13 @@
 
 use crate::laws;
 use crate::laws::InverseWhereDefined;
+use crate::signature::ScalarMul;
 use crate::signature::{
     Additive, BinaryOp, HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse, HasSinCos,
     HasSqrt, Multiplicative, op,
 };
 use crate::structures::{CommutativeRing, ElementaryRing};
+use crate::structures::{Module, Ring};
 
 /// `re + eps·ε`
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
@@ -155,7 +157,18 @@ impl<T: HasSinCos + BinaryOp<Multiplicative> + HasInverse<Additive>> HasSinCos f
     }
 }
 
+/// Skalare des Grundtyps wirken auf beide Anteile: `s·(a + bε) = s·a + s·b·ε`.
+/// Damit gelangen Konstanten in generische Formeln: `1.scale(&s)`.
+impl<S, T: ScalarMul<S>> ScalarMul<S> for Dual<T> {
+    fn scale(&self, s: &S) -> Self {
+        Self::new(self.re.scale(s), self.eps.scale(s))
+    }
+}
+
 laws! {
+    for[S: Ring, T: Module<S>] Dual<T> {
+        S: module;
+    }
     for[T: CommutativeRing] Dual<T> {
         Additive: associative, commutative, identity, inverse;
         Multiplicative: associative, alternative, flexible, commutative, identity;

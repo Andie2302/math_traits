@@ -19,6 +19,7 @@ pub mod vector;
 
 use crate::laws;
 use crate::signature::HasRootsOfUnity;
+use crate::signature::ScalarMul;
 use crate::signature::{
     Additive, BinaryOp, BinaryRelation, HasConjugate, HasDivRem, HasEuclideanSize, HasIdentity,
     HasInverse, HasPartialInverse, Join, LessEq, Meet, Multiplicative,
@@ -53,6 +54,9 @@ macro_rules! wrapping_int {
         impl HasConjugate for $t {
             fn conj(&self) -> Self { *self }
         }
+        impl ScalarMul<$t> for $t {
+            fn scale(&self, s: &$t) -> Self { s.wrapping_mul(*self) }
+        }
         impl HasRootsOfUnity for $t {
             /// In `ℤ/2ⁿ` gibt es nur `1` und `−1`.
             fn primitive_root_of_unity(n: usize) -> Option<Self> {
@@ -79,6 +83,7 @@ macro_rules! wrapping_int {
                 [Meet, Join]: absorption;
                 [Join, Meet]: absorption;
                 LessEq: total_order;
+                $t: module;
             }
         }
     )*};

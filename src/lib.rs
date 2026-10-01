@@ -64,6 +64,7 @@ pub mod geometry;
 pub mod impls;
 pub mod laws;
 mod macros;
+pub mod num;
 pub mod signature;
 #[cfg(feature = "alloc")]
 pub mod solve;

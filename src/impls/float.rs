@@ -18,6 +18,7 @@
 
 use crate::laws;
 use crate::signature::HasRootsOfUnity;
+use crate::signature::ScalarMul;
 use crate::signature::{
     Additive, BinaryOp, BinaryRelation, HasConjugate, HasIdentity, HasInverse, HasPartialInverse,
     LessEq, Multiplicative,
@@ -54,6 +55,10 @@ macro_rules! float {
         impl HasConjugate for $t {
             fn conj(&self) -> Self { *self }
         }
+        /// ℝ als Modul über sich selbst: `s · x = s·x`.
+        impl ScalarMul<$t> for $t {
+            fn scale(&self, s: &$t) -> Self { s * self }
+        }
         impl HasRootsOfUnity for $t {
             /// In ℝ gibt es nur `1` und `−1`.
             fn primitive_root_of_unity(n: usize) -> Option<Self> {
@@ -70,6 +75,7 @@ macro_rules! float {
                 Multiplicative: associative, commutative, identity, conjugation, self_conjugate;
                 [Multiplicative, Additive]: distributive, zero_divisor_free, inverse_except_zero, nontrivial;
                 LessEq: total_order;
+                $t: module;
                 [Additive, LessEq]: monotone;
                 [Multiplicative, Additive, LessEq]: positive_product;
                 Multiplicative: inverse_where_defined, primitive_root_of_unity;

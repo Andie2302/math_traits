@@ -23,10 +23,12 @@
 
 use crate::laws;
 use crate::signature::HasRootsOfUnity;
+use crate::signature::ScalarMul;
 use crate::signature::{
     Additive, BinaryOp, HasConjugate, HasIdentity, HasInverse, HasPartialInverse, Multiplicative,
     op,
 };
+use crate::structures::{Module, Ring};
 #[cfg(any(feature = "std", feature = "libm"))]
 use {
     super::fmath::FMath,
@@ -121,6 +123,19 @@ where
         let inv = norm.try_inverse()?;
         let real = Self::new(inv, <T as HasIdentity<Additive>>::identity());
         Some(op::<Multiplicative, _>(&conj, &real))
+    }
+}
+
+/// Skalare des Grundtyps wirken auf beide Hälften: `s·(a, b) = (s·a, s·b)`.
+impl<S, T: ScalarMul<S>> ScalarMul<S> for CayleyDickson<T> {
+    fn scale(&self, s: &S) -> Self {
+        Self::new(self.re.scale(s), self.im.scale(s))
+    }
+}
+
+laws! {
+    for[S: Ring, T: Module<S>] CayleyDickson<T> {
+        S: module;
     }
 }
 

@@ -152,3 +152,43 @@ where
     }));
     (values, jac)
 }
+
+/// Wert und alle Ableitungen bis zur 2. Ordnung einer Funktion `f(x, y)`.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct Partials2<T> {
+    pub f: T,
+    pub fx: T,
+    pub fy: T,
+    pub fxx: T,
+    pub fxy: T,
+    pub fyy: T,
+}
+
+/// Berechnet [`Partials2`] mit drei Auswertungen über `Dual<Dual<T>>`:
+/// `(x, x)` für `f_xx`, `(y, y)` für `f_yy`, `(x, y)` für Wert, `f_x`, `f_y`, `f_xy`.
+pub fn partials_2<T: CommutativeRing + Clone>(
+    f: impl Fn(Dual<Dual<T>>, Dual<Dual<T>>) -> Dual<Dual<T>>,
+    x: T,
+    y: T,
+) -> Partials2<T> {
+    use crate::signature::Additive;
+    let zero = || <T as HasIdentity<Additive>>::identity();
+    let one = || <T as HasIdentity<Multiplicative>>::identity();
+    // Seeds: ε₁ innen, ε₂ außen
+    let both = |v: &T| Dual::new(Dual::new(v.clone(), one()), Dual::new(one(), zero()));
+    let inner = |v: &T| Dual::new(Dual::new(v.clone(), one()), Dual::new(zero(), zero()));
+    let outer = |v: &T| Dual::new(Dual::new(v.clone(), zero()), Dual::new(one(), zero()));
+    let constant = |v: &T| Dual::new(Dual::new(v.clone(), zero()), Dual::new(zero(), zero()));
+
+    let xx = f(both(&x), constant(&y));
+    let yy = f(constant(&x), both(&y));
+    let xy = f(inner(&x), outer(&y));
+    Partials2 {
+        f: xy.re.re,
+        fx: xy.re.eps,
+        fy: xy.eps.re,
+        fxx: xx.eps.eps,
+        fxy: xy.eps.eps,
+        fyy: yy.eps.eps,
+    }
+}
