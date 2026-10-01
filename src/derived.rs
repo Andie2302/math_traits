@@ -9,7 +9,9 @@
 //! in der Basis.
 
 use crate::signature::{Additive, HasIdentity, HasInverse, HasPartialInverse, Multiplicative, op};
-use crate::structures::{CommutativeMonoid, DivisionRing, Group, Monoid};
+use crate::structures::{
+    CommutativeMonoid, DivisionRing, EuclideanRing, Group, Monoid, OrderedField,
+};
 
 /// `xⁿ` per Square-and-Multiply in `O(log n)` Schritten.
 ///
@@ -68,4 +70,29 @@ pub fn sub<T: Group<Additive>>(a: &T, b: &T) -> T {
 /// `a / b = a · b⁻¹`, `None` für `b = 0`.
 pub fn try_div<T: DivisionRing>(a: &T, b: &T) -> Option<T> {
     <T as HasPartialInverse<Multiplicative>>::try_inverse(b).map(|i| op::<Multiplicative, _>(a, &i))
+}
+
+/// Größter gemeinsamer Teiler per euklidischem Algorithmus. Er endet, weil
+/// der Rest nach [`RemainderDecreases`](crate::laws::RemainderDecreases)
+/// schrumpft.
+pub fn gcd<T: EuclideanRing + PartialEq>(a: &T, b: &T) -> T {
+    let zero = <T as HasIdentity<Additive>>::identity();
+    let mut a = op::<Additive, _>(a, &zero);
+    let mut b = op::<Additive, _>(b, &zero);
+    while b != zero {
+        let (_, r) = a.div_rem(&b).expect("b ≠ 0");
+        a = b;
+        b = r;
+    }
+    a
+}
+
+/// `|x|` in einem geordneten Körper.
+pub fn abs<T: OrderedField>(x: &T) -> T {
+    let zero = <T as HasIdentity<Additive>>::identity();
+    if zero.relates(x) {
+        op::<Additive, _>(x, &zero)
+    } else {
+        <T as HasInverse<Additive>>::inverse(x)
+    }
 }

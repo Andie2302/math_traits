@@ -3,16 +3,21 @@
 //! * Ganzzahlen mit **Wrapping**-Arithmetik bilden den Ring `ℤ/2ⁿ`. Mit
 //!   `min`/`max` bilden sie einen Verband, mit `<=` eine Totalordnung.
 //!   Monotonie von `+` gilt wegen des Überlaufs *nicht* und wird deshalb auch
-//!   nicht deklariert.
+//!   nicht deklariert. Division mit Rest ist euklidisch (`gcd`).
 //! * `bool` mit `xor`/`and` ist der Körper `GF(2)`, mit `and`/`or` ein
 //!   Verband.
-//! * `f64` bekommt bewusst keine Gesetze: Gleitkomma-Addition ist nicht
-//!   assoziativ.
+//! * `f64`/`f32`: siehe [`float`].
+//! * Cayley-Dickson (komplexe Zahlen bis Sedenionen): siehe [`cayley_dickson`].
+//! * Vektoren `[T; N]`: siehe [`vector`].
+
+pub mod cayley_dickson;
+pub mod float;
+pub mod vector;
 
 use crate::laws;
 use crate::signature::{
-    Additive, BinaryOp, BinaryRelation, HasIdentity, HasInverse, HasPartialInverse, Join, LessEq,
-    Meet, Multiplicative,
+    Additive, BinaryOp, BinaryRelation, HasConjugate, HasDivRem, HasEuclideanSize, HasIdentity,
+    HasInverse, HasPartialInverse, Join, LessEq, Meet, Multiplicative,
 };
 
 macro_rules! wrapping_int {
@@ -41,12 +46,20 @@ macro_rules! wrapping_int {
         impl BinaryRelation<LessEq> for $t {
             fn relates(&self, other: &Self) -> bool { self <= other }
         }
+        impl HasConjugate for $t {
+            fn conj(&self) -> Self { *self }
+        }
+        impl HasDivRem for $t {
+            fn div_rem(&self, d: &Self) -> Option<(Self, Self)> {
+                (*d != 0).then(|| (self.wrapping_div(*d), self.wrapping_rem(*d)))
+            }
+        }
 
         laws! {
             $t {
                 Additive: associative, commutative, identity, inverse, cancellative;
-                Multiplicative: associative, commutative, identity;
-                [Multiplicative, Additive]: distributive;
+                Multiplicative: associative, commutative, identity, conjugation;
+                [Multiplicative, Additive]: distributive, euclidean;
                 Meet: associative, commutative, idempotent;
                 Join: associative, commutative, idempotent;
                 [Meet, Join]: absorption;
@@ -60,6 +73,19 @@ macro_rules! wrapping_int {
 wrapping_int!(
     i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
 );
+
+macro_rules! euclidean_size {
+    (signed: $($s:ty),*; unsigned: $($u:ty),*) => {
+        $(impl HasEuclideanSize for $s {
+            fn euclidean_size(&self) -> u128 { self.unsigned_abs() as u128 }
+        })*
+        $(impl HasEuclideanSize for $u {
+            fn euclidean_size(&self) -> u128 { *self as u128 }
+        })*
+    };
+}
+
+euclidean_size!(signed: i8, i16, i32, i64, i128, isize; unsigned: u8, u16, u32, u64, u128, usize);
 
 impl BinaryOp<Additive> for bool {
     fn op(&self, rhs: &Self) -> Self {

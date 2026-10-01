@@ -71,3 +71,28 @@ pub trait BinaryRelation<R> {
 pub fn op<Op, T: BinaryOp<Op>>(a: &T, b: &T) -> T {
     <T as BinaryOp<Op>>::op(a, b)
 }
+
+// ===========================================================================
+// Weitere Operationen
+// ===========================================================================
+
+/// Konjugation `x ↦ x*` (z. B. komplexe Konjugation; für reelle Zahlen die
+/// Identität). Grundlage der Cayley-Dickson-Konstruktion.
+pub trait HasConjugate: Sized {
+    fn conj(&self) -> Self;
+}
+
+/// Division mit Rest: `a.div_rem(b) = Some((q, r))`, `None` für `b = 0`.
+pub trait HasDivRem: Sized {
+    fn div_rem(&self, divisor: &Self) -> Option<(Self, Self)>;
+}
+
+/// Eine Größe in `ℕ`, die bei Division mit Rest für den Rest schrumpft.
+pub trait HasEuclideanSize {
+    fn euclidean_size(&self) -> u128;
+}
+
+/// Externe Operation `S × V → V`: Skalar mal Vektor, `s · v`.
+pub trait ScalarMul<S>: Sized {
+    fn scale(&self, s: &S) -> Self;
+}

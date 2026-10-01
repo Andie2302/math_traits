@@ -13,8 +13,8 @@ Die Basis ist für eine Version abgeschlossen, wenn alle drei Punkte gelten:
 1. **Zielstrukturen:** Jede Struktur im Zielkatalog (`tests/targets.rs`) ist
    als leerer Alias über Gesetze ausdrückbar.
 2. **Zielalgorithmen:** Jeder Algorithmus im Katalog kompiliert *nur* mit
-   Bounds aus `structures`, ohne zusätzliche Trait-Bounds oder Annahmen im
-   Doc-Kommentar.
+   Bounds aus `structures` (plus `Clone`/`PartialEq`), ohne zusätzliche
+   Annahmen im Doc-Kommentar.
 3. **Signatur stabil:** Für die letzten Ziele musste nichts mehr in
    `signature.rs` ergänzt werden.
 
@@ -30,19 +30,36 @@ jederzeit möglich.
 
 ## Stand
 
-| Ziel | Status | Was fehlt |
+| Ziel | Status | Was dafür nötig war |
 |---|---|---|
-| Monoid, Gruppe, abelsche Gruppe | erreicht | |
-| Ring, kommutativer Ring, Integritätsbereich | erreicht | |
-| Schiefkörper, Körper | erreicht | |
-| Verband, Totalordnung | erreicht | |
-| `pow`, `pow_signed`, `sum`, `product`, `sub`, `try_div` | erreicht | |
-| Geordneter Körper | offen | Gesetz (Verträglichkeit von `·` mit `≤`) |
-| Euklidischer Ring, `gcd` | offen | **Signatur**: Division mit Rest |
-| Modul, Vektorraum | offen | **Signatur**: externe Operation `S × V → V` |
-| Normierter Raum | offen | nur Strukturen/Gesetze auf Basis der beiden vorigen |
+| Monoid, Gruppe, Ring, Körper, Verband, Ordnung | erreicht | |
+| Geordneter Körper (`f64`, `f32`) | erreicht | Gesetz `PositiveProduct` |
+| Euklidischer Ring, `gcd` | erreicht | **Signatur** `HasDivRem`, `HasEuclideanSize` |
+| Modul, Vektorraum (`[T; N]`) | erreicht | **Signatur** `ScalarMul<S>` |
+| ℂ, ℍ, 𝕆, 𝕊 (Cayley-Dickson) | erreicht | **Signatur** `HasConjugate`; Struktur `NonAssociativeRing` |
+| Bisektion | erreicht | `OrderedField` |
+| Gauß (exakt / mit Pivot) | erreicht | `Field` / `OrderedField` |
+| Newton in `n` Dimensionen | erreicht | `OrderedField` |
+| Normierter Raum | **offen** | **Signatur** `‖·‖: V → S` |
 
-Es bleiben also **zwei Signatur-Erweiterungen** (Division mit Rest und die
-externe Operation). Danach ist die Basis nach diesem Kriterium abgeschlossen,
-und der Schwerpunkt wechselt zu Implementierungen (Typen, Algorithmen,
-Ergonomie).
+Es bleibt also **eine Signatur-Erweiterung**: die Norm. Danach ist die
+Basis nach diesem Kriterium für die bisherigen Ziele abgeschlossen.
+
+## Bekannte Lücke: Folgerungen zwischen Gesetzen
+
+Mathematisch folgt aus `associative`, dass auch `alternative` und `flexible`
+gelten. Das System leitet solche Sätze nicht selbst ab. Man muss sie
+mitdeklarieren (siehe ℂ und ℍ in `impls/cayley_dickson.rs`). Ein
+Blanket-Impl (`Associative ⇒ Flexible`) geht nicht, weil es mit den
+Makro-Impls kollidiert.
+
+Das ist eine Frage der Bequemlichkeit, nicht der Basis. Lösen ließe sie sich
+im Makro: Zusammengesetzte Schlüsselwörter können ihre Folgerungen gleich
+mitdeklarieren, z. B. könnte `associative` künftig auch `flexible` und
+`alternative` erzeugen.
+
+## Gleitkomma
+
+`f64`/`f32` sind als **Modell** von `ℝ` deklariert: Die Gesetze gelten bis
+auf Rundung und nur für endliche Werte. Exakte Prüfungen laufen deshalb über
+Ganzzahlen (Cayley-Dickson über `i64`) und endliche Körper (`GF(p)`, `bool`).

@@ -14,7 +14,8 @@
 
 use crate::__private::Token;
 use crate::signature::{
-    BinaryOp, BinaryRelation, HasAbsorbing, HasIdentity, HasInverse, HasPartialInverse, op,
+    Additive, BinaryOp, BinaryRelation, HasAbsorbing, HasConjugate, HasDivRem, HasEuclideanSize,
+    HasIdentity, HasInverse, HasPartialInverse, Multiplicative, ScalarMul, op,
 };
 
 // ===========================================================================
@@ -379,5 +380,134 @@ pub trait RightMonotone<Op, R>: BinaryOp<Op> + BinaryRelation<R> {
     fn __sealed(_: Token);
     fn holds(x: &Self, y: &Self, z: &Self) -> bool {
         !x.relates(y) || op::<Op, _>(x, z).relates(&op::<Op, _>(y, z))
+    }
+}
+
+/// `0 R x ∧ 0 R y  ⇒  0 R (x · y)` (Produkt nichtnegativer Elemente ist nichtnegativ)
+pub trait PositiveProduct<Mul, Add, R>:
+    BinaryOp<Mul> + HasIdentity<Add> + BinaryRelation<R>
+{
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self, y: &Self) -> bool {
+        let zero = <Self as HasIdentity<Add>>::identity();
+        !(zero.relates(x) && zero.relates(y)) || zero.relates(&op::<Mul, _>(x, y))
+    }
+}
+
+// ===========================================================================
+// 7. Konjugation
+// ===========================================================================
+
+/// `(x*)* = x`
+pub trait Involutive<Mul>: HasConjugate {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        x.conj().conj() == *x
+    }
+}
+
+/// `(x · y)* = y* · x*`
+pub trait AntiMultiplicative<Mul>: BinaryOp<Mul> + HasConjugate {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self, y: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        op::<Mul, _>(x, y).conj() == op::<Mul, _>(&y.conj(), &x.conj())
+    }
+}
+
+// ===========================================================================
+// 8. Division mit Rest
+// ===========================================================================
+
+/// `b ≠ 0  ⇒  a = q · b + r` mit `(q, r) = a.div_rem(b)`
+pub trait DivisionWithRemainder<Mul, Add>: HasDivRem + BinaryOp<Mul> + HasIdentity<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(a: &Self, b: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        *b == <Self as HasIdentity<Add>>::identity()
+            || a.div_rem(b)
+                .is_some_and(|(q, r)| op::<Add, _>(&op::<Mul, _>(&q, b), &r) == *a)
+    }
+}
+
+/// `b ≠ 0  ⇒  r = 0 ∨ |r| < |b|`: Der Rest schrumpft, also endet der
+/// euklidische Algorithmus.
+pub trait RemainderDecreases<Mul, Add>: HasDivRem + HasEuclideanSize + HasIdentity<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(a: &Self, b: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        let zero = <Self as HasIdentity<Add>>::identity();
+        *b == zero
+            || a.div_rem(b)
+                .is_some_and(|(_, r)| r == zero || r.euclidean_size() < b.euclidean_size())
+    }
+}
+
+// ===========================================================================
+// 9. Externe Operation (Module, Vektorräume)
+// ===========================================================================
+
+/// `1 · v = v`
+pub trait ScalarIdentity<S>: ScalarMul<S> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(v: &Self) -> bool
+    where
+        Self: PartialEq,
+        S: HasIdentity<Multiplicative>,
+    {
+        v.scale(&S::identity()) == *v
+    }
+}
+
+/// `(s · t) · v = s · (t · v)`
+pub trait ScalarCompatible<S>: ScalarMul<S> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(s: &S, t: &S, v: &Self) -> bool
+    where
+        Self: PartialEq,
+        S: BinaryOp<Multiplicative>,
+    {
+        v.scale(&op::<Multiplicative, _>(s, t)) == v.scale(t).scale(s)
+    }
+}
+
+/// `s · (v + w) = s · v + s · w`
+pub trait ScalarDistributesOverVectors<S>: ScalarMul<S> + BinaryOp<Additive> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(s: &S, v: &Self, w: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        op::<Additive, _>(v, w).scale(s) == op::<Additive, _>(&v.scale(s), &w.scale(s))
+    }
+}
+
+/// `(s + t) · v = s · v + t · v`
+pub trait ScalarDistributesOverScalars<S>: ScalarMul<S> + BinaryOp<Additive> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(s: &S, t: &S, v: &Self) -> bool
+    where
+        Self: PartialEq,
+        S: BinaryOp<Additive>,
+    {
+        v.scale(&op::<Additive, _>(s, t)) == op::<Additive, _>(&v.scale(s), &v.scale(t))
     }
 }

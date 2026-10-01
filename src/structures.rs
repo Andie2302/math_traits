@@ -40,6 +40,14 @@ structure!(
     InverseExceptZero<Mul, Add> = LeftInverseExceptZero<Mul, Add> + RightInverseExceptZero<Mul, Add>
 );
 structure!(Monotone<Op, R> = LeftMonotone<Op, R> + RightMonotone<Op, R>);
+structure!(
+    /// `(x*)* = x` und `(x·y)* = y*·x*`
+    Involution<Mul> = Involutive<Mul> + AntiMultiplicative<Mul>
+);
+structure!(
+    /// Division mit Rest, bei der der Rest schrumpft.
+    Euclidean<Mul, Add> = DivisionWithRemainder<Mul, Add> + RemainderDecreases<Mul, Add>
+);
 
 // ===========================================================================
 // Eine Operation
@@ -69,10 +77,19 @@ structure!(TotalOrder<R> = PartialOrder<R> + Total<R>);
 // ===========================================================================
 
 structure!(
-    /// Ring mit Eins.
-    Ring<> = AbelianGroup<Additive>
-        + Monoid<Multiplicative>
+    /// Ring ohne Assoziativität der Multiplikation, aber mit Eins.
+    /// Grundlage für Oktonionen und Sedenionen.
+    NonAssociativeRing<> = AbelianGroup<Additive>
+        + Identity<Multiplicative>
         + Distributive<Multiplicative, Additive>
+);
+structure!(
+    /// Alternativ: Oktonionen. Teilalgebren aus zwei Elementen sind assoziativ.
+    AlternativeRing<> = NonAssociativeRing + Alternative<Multiplicative> + Flexible<Multiplicative>
+);
+structure!(
+    /// Ring mit Eins.
+    Ring<> = NonAssociativeRing + Associative<Multiplicative>
 );
 structure!(CommutativeRing<> = Ring + Commutative<Multiplicative>);
 structure!(
@@ -103,3 +120,24 @@ structure!(
         + NonTrivial<Multiplicative, Additive>
 );
 structure!(Field<> = DivisionRing + Commutative<Multiplicative>);
+structure!(
+    /// Geordneter Körper: Grundlage für Bisektion, Newton und Pivot-Suche.
+    OrderedField<> = Field
+        + TotalOrder<LessEq>
+        + Monotone<Additive, LessEq>
+        + PositiveProduct<Multiplicative, Additive, LessEq>
+);
+structure!(
+    /// Kommutativer Ring mit Division mit Rest. Darauf läuft `gcd`.
+    EuclideanRing<> = CommutativeRing + Euclidean<Multiplicative, Additive>
+);
+structure!(
+    /// Modul über dem Skalartyp `S`. Ist `S` ein [`Field`], ist das ein
+    /// Vektorraum. Rust kann `S: Field` hier nicht als Folgerung
+    /// mitschleppen, deshalb schreibt man bei Bedarf `V: Module<S>, S: Field`.
+    Module<S> = AbelianGroup<Additive>
+        + ScalarIdentity<S>
+        + ScalarCompatible<S>
+        + ScalarDistributesOverVectors<S>
+        + ScalarDistributesOverScalars<S>
+);

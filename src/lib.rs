@@ -55,6 +55,7 @@ pub mod impls;
 pub mod laws;
 mod macros;
 pub mod signature;
+pub mod solve;
 pub mod structures;
 
 /// Interna für das [`laws!`]-Makro. Nicht direkt verwenden.
