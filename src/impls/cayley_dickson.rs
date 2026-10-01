@@ -123,22 +123,22 @@ macro_rules! cayley_dickson_laws {
     ($($b:ty),*) => {$(
         laws! {
             Complex<$b> {
-                Additive: associative, commutative, identity, inverse;
+                Additive: associative, commutative, identity, inverse, conjugate_additive;
                 Multiplicative: associative, alternative, flexible, commutative, identity, conjugation;
                 [Multiplicative, Additive]: distributive;
             }
             Quaternion<$b> {
-                Additive: associative, commutative, identity, inverse;
+                Additive: associative, commutative, identity, inverse, conjugate_additive;
                 Multiplicative: associative, alternative, flexible, identity, conjugation;
                 [Multiplicative, Additive]: distributive;
             }
             Octonion<$b> {
-                Additive: associative, commutative, identity, inverse;
+                Additive: associative, commutative, identity, inverse, conjugate_additive;
                 Multiplicative: alternative, flexible, identity, conjugation;
                 [Multiplicative, Additive]: distributive;
             }
             Sedenion<$b> {
-                Additive: associative, commutative, identity, inverse;
+                Additive: associative, commutative, identity, inverse, conjugate_additive;
                 Multiplicative: flexible, identity, conjugation;
                 [Multiplicative, Additive]: distributive;
             }

@@ -4,10 +4,12 @@
 //! Gesetze erfüllt. Das zeigt die generische Form von `laws!`.
 
 use crate::laws;
+use crate::laws::{ConjugateAdditive, SelfConjugate};
 use crate::signature::{
-    Additive, BinaryOp, HasIdentity, HasInverse, Multiplicative, ScalarMul, op,
+    Additive, BinaryOp, HasConjugate, HasIdentity, HasInverse, InnerProduct, LessEq,
+    Multiplicative, ScalarMul, op,
 };
-use crate::structures::{AbelianGroup, Ring};
+use crate::structures::{AbelianGroup, CommutativeRing, Involution, OrderedField, Ring};
 
 impl<T: BinaryOp<Additive>, const N: usize> BinaryOp<Additive> for [T; N] {
     fn op(&self, rhs: &Self) -> Self {
@@ -34,11 +36,31 @@ impl<T: BinaryOp<Multiplicative>, const N: usize> ScalarMul<T> for [T; N] {
     }
 }
 
+/// `⟨v, w⟩ = Σ vᵢ* · wᵢ`
+impl<T, const N: usize> InnerProduct<T> for [T; N]
+where
+    T: BinaryOp<Multiplicative> + BinaryOp<Additive> + HasIdentity<Additive> + HasConjugate,
+{
+    fn inner(&self, other: &Self) -> T {
+        self.iter().zip(other).fold(T::identity(), |acc, (v, w)| {
+            op::<Additive, _>(&acc, &op::<Multiplicative, _>(&v.conj(), w))
+        })
+    }
+}
+
 laws! {
     for[T: AbelianGroup<Additive>, const N: usize] [T; N] {
         Additive: associative, commutative, identity, inverse;
     }
     for[T: Ring, const N: usize] [T; N] {
         T: module;
+    }
+    for[T: CommutativeRing + Involution<Multiplicative> + ConjugateAdditive<Additive>, const N: usize] [T; N] {
+        T: inner_product;
+    }
+    // Über reellen geordneten Skalaren ist das Skalarprodukt positiv definit.
+    for[T: OrderedField + SelfConjugate<Multiplicative> + ConjugateAdditive<Additive>, const N: usize] [T; N] {
+        T: inner_definite;
+        [T, LessEq]: inner_non_negative;
     }
 }

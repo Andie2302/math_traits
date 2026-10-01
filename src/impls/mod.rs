@@ -58,8 +58,8 @@ macro_rules! wrapping_int {
 
         laws! {
             $t {
-                Additive: associative, commutative, identity, inverse, cancellative;
-                Multiplicative: associative, commutative, identity, conjugation;
+                Additive: associative, commutative, identity, inverse, cancellative, conjugate_additive;
+                Multiplicative: associative, commutative, identity, conjugation, self_conjugate;
                 [Multiplicative, Additive]: distributive, euclidean;
                 Meet: associative, commutative, idempotent;
                 Join: associative, commutative, idempotent;

@@ -15,8 +15,8 @@
 use crate::__private::Token;
 use crate::signature::{
     Additive, BinaryOp, BinaryRelation, HasAbsorbing, HasConjugate, HasDivRem, HasEuclideanSize,
-    HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse, HasSinCos, HasSqrt, Multiplicative,
-    ScalarMul, op,
+    HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse, HasSinCos, HasSqrt, InnerProduct,
+    Multiplicative, ScalarMul, op,
 };
 
 // ===========================================================================
@@ -624,5 +624,98 @@ pub trait CosineAddition<Mul, Add>: HasSinCos + BinaryOp<Mul> + HasInverse<Add> 
                 &op::<Mul, _>(&x.cos(), &y.cos()),
                 &op::<Mul, _>(&x.sin(), &y.sin()).inverse(),
             )
+    }
+}
+
+// ===========================================================================
+// 11. Konjugation und Addition, reelle Elemente
+// ===========================================================================
+
+/// `(x + y)* = x* + y*`
+pub trait ConjugateAdditive<Add>: HasConjugate + BinaryOp<Add> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self, y: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        op::<Add, _>(x, y).conj() == op::<Add, _>(&x.conj(), &y.conj())
+    }
+}
+
+/// `x* = x`: Jedes Element ist reell (Konjugation ist die Identität).
+pub trait SelfConjugate<Mul>: HasConjugate {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(x: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        x.conj() == *x
+    }
+}
+
+// ===========================================================================
+// 12. Skalarprodukt
+// ===========================================================================
+
+/// `⟨u, v + w⟩ = ⟨u, v⟩ + ⟨u, w⟩`
+pub trait InnerAdditive<S>: InnerProduct<S> + BinaryOp<Additive> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(u: &Self, v: &Self, w: &Self) -> bool
+    where
+        S: BinaryOp<Additive> + PartialEq,
+    {
+        u.inner(&op::<Additive, _>(v, w)) == op::<Additive, _>(&u.inner(v), &u.inner(w))
+    }
+}
+
+/// `⟨u, s · v⟩ = s · ⟨u, v⟩`
+pub trait InnerHomogeneous<S>: InnerProduct<S> + ScalarMul<S> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(s: &S, u: &Self, v: &Self) -> bool
+    where
+        S: BinaryOp<Multiplicative> + PartialEq,
+    {
+        u.inner(&v.scale(s)) == op::<Multiplicative, _>(s, &u.inner(v))
+    }
+}
+
+/// `⟨v, u⟩ = ⟨u, v⟩*` (für reelle Skalare: Symmetrie)
+pub trait InnerConjugateSymmetric<S>: InnerProduct<S> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(u: &Self, v: &Self) -> bool
+    where
+        S: HasConjugate + PartialEq,
+    {
+        v.inner(u) == u.inner(v).conj()
+    }
+}
+
+/// `0 R ⟨v, v⟩`
+pub trait InnerNonNegative<S, R>: InnerProduct<S> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(v: &Self) -> bool
+    where
+        S: HasIdentity<Additive> + BinaryRelation<R>,
+    {
+        S::identity().relates(&v.inner(v))
+    }
+}
+
+/// `⟨v, v⟩ = 0  ⇒  v = 0`
+pub trait InnerDefinite<S>: InnerProduct<S> + HasIdentity<Additive> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(v: &Self) -> bool
+    where
+        Self: PartialEq,
+        S: HasIdentity<Additive> + PartialEq,
+    {
+        v.inner(v) != S::identity() || *v == Self::identity()
     }
 }

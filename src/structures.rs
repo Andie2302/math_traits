@@ -161,3 +161,18 @@ structure!(
     /// in dem jede nichtnegative Zahl eine Wurzel hat.
     RealField<> = OrderedField + ElementaryRing + SqrtOfNonNegative<Additive, LessEq>
 );
+structure!(
+    /// Modul mit Skalarprodukt (linear im zweiten Argument, konjugiert-
+    /// symmetrisch). Positivität ist hier noch nicht verlangt: Über ℂ gibt
+    /// es keine Ordnung, an der man sie festmachen könnte.
+    InnerProductSpace<S> = Module<S>
+        + InnerAdditive<S>
+        + InnerHomogeneous<S>
+        + InnerConjugateSymmetric<S>
+);
+structure!(
+    /// Euklidischer Raum über geordneten Skalaren: Skalarprodukt positiv
+    /// definit, also `‖v‖ = sqrt(⟨v, v⟩)` eine Norm. Wie bei [`Module`]
+    /// schreibt man bei Bedarf `S: RealField` dazu.
+    EuclideanSpace<S> = InnerProductSpace<S> + InnerNonNegative<S, LessEq> + InnerDefinite<S>
+);

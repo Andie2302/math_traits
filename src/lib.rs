@@ -52,6 +52,7 @@
 
 pub mod autodiff;
 pub mod derived;
+pub mod geometry;
 pub mod impls;
 pub mod laws;
 mod macros;

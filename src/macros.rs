@@ -109,6 +109,12 @@ macro_rules! __law {
     (exp_inverts_ln; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ExpInvertsLn; $g $t; $a); };
     (sqrt_squares; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(SqrtSquares; $g $t; $a); };
     (inverse_where_defined; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InverseWhereDefined; $g $t; $a); };
+    (self_conjugate; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(SelfConjugate; $g $t; $a); };
+    (conjugate_additive; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ConjugateAdditive; $g $t; $a); };
+    (inner_additive; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerAdditive; $g $t; $a); };
+    (inner_homogeneous; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerHomogeneous; $g $t; $a); };
+    (inner_conjugate_symmetric; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerConjugateSymmetric; $g $t; $a); };
+    (inner_definite; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerDefinite; $g $t; $a); };
     // --- Atome: zwei Parameter -------------------------------------------------
     (left_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(LeftDistributive; $g $t; $a, $b); };
     (right_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(RightDistributive; $g $t; $a, $b); };
@@ -127,6 +133,7 @@ macro_rules! __law {
     (pythagorean; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(Pythagorean; $g $t; $a, $b); };
     (sine_addition; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(SineAddition; $g $t; $a, $b); };
     (cosine_addition; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(CosineAddition; $g $t; $a, $b); };
+    (inner_non_negative; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(InnerNonNegative; $g $t; $a, $b); };
     // --- Atome: drei Parameter -------------------------------------------------
     (positive_product; $g:tt $t:ty; $a:ty, $b:ty, $c:ty) => { $crate::__impl_law!(PositiveProduct; $g $t; $a, $b, $c); };
     // --- Zusammengesetzte Schlüsselwörter --------------------------------------
@@ -192,6 +199,11 @@ macro_rules! __law {
         $crate::__law!(pythagorean; $g $t; $a, $b);
         $crate::__law!(sine_addition; $g $t; $a, $b);
         $crate::__law!(cosine_addition; $g $t; $a, $b);
+    };
+    (inner_product; $g:tt $t:ty; $a:ty) => {
+        $crate::__law!(inner_additive; $g $t; $a);
+        $crate::__law!(inner_homogeneous; $g $t; $a);
+        $crate::__law!(inner_conjugate_symmetric; $g $t; $a);
     };
     // --- Unbekannt -------------------------------------------------------------
     ($law:ident; $($rest:tt)*) => {

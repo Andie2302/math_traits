@@ -125,3 +125,13 @@ pub trait HasSinCos: Sized {
     fn sin(&self) -> Self;
     fn cos(&self) -> Self;
 }
+
+// ===========================================================================
+// Skalarprodukt
+// ===========================================================================
+
+/// Skalarprodukt `⟨v, w⟩: V × V → S`. Über ℂ ist es im **ersten** Argument
+/// konjugiert-linear: `⟨v, w⟩ = Σ vᵢ* · wᵢ`.
+pub trait InnerProduct<S> {
+    fn inner(&self, other: &Self) -> S;
+}

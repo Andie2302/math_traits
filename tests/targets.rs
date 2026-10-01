@@ -9,6 +9,7 @@
 
 use math_traits::autodiff::*;
 use math_traits::derived::*;
+use math_traits::geometry::*;
 use math_traits::impls::cayley_dickson::*;
 use math_traits::signature::*;
 use math_traits::solve::*;
@@ -34,8 +35,8 @@ fn lattice<T: Lattice>() {}
 fn total_order<T: TotalOrder<LessEq>>() {}
 fn elementary_ring<T: ElementaryRing>() {}
 fn real_field<T: RealField>() {}
-// OFFEN: InnerProductSpace – Signatur `⟨·,·⟩: V × V → S` (Schritt 2)
-// OFFEN: NormedSpace – Folgerung aus InnerProductSpace + sqrt
+fn inner_product_space<V: InnerProductSpace<S>, S>() {}
+fn euclidean_space<V: EuclideanSpace<S>, S: RealField>() {}
 // OFFEN: Einheitswurzeln – Signatur für FFT (Schritt 3)
 
 // --- Cayley-Dickson bis zu den Sedenionen --------------------------------
@@ -50,6 +51,12 @@ fn cayley_dickson_tower() {
     euclidean_ring::<i64>();
     vector_space::<[f64; 3], f64>();
     module::<[i64; 4], i64>();
+}
+
+#[test]
+fn inner_products() {
+    euclidean_space::<[f64; 3], f64>();
+    inner_product_space::<[Complex<f64>; 2], Complex<f64>>();
 }
 
 #[test]
@@ -109,6 +116,29 @@ fn newton_auto<T: OrderedField + PartialEq + Clone>(
 ) -> Option<Vec<T>> {
     newton_autodiff(f, x0, tol, 100)
 }
+fn length<V: EuclideanSpace<S>, S: RealField>(v: &V) -> S {
+    norm(v)
+}
+fn cg<V: EuclideanSpace<S>, S: RealField + Clone>(
+    a: impl Fn(&V) -> V,
+    b: &V,
+    x0: V,
+    tol: &S,
+) -> Option<V> {
+    conjugate_gradient(a, b, x0, tol, 1000)
+}
+fn ode<V: Module<S>, S: OrderedField>(f: impl Fn(&S, &V) -> V, t: &S, y: &V, h: &S) -> V {
+    rk4_step(f, t, y, h)
+}
+fn n_body<V: EuclideanSpace<S>, S: RealField>(
+    x: &[V],
+    v: &[V],
+    m: &[S],
+    g: &S,
+    h: &S,
+) -> (Vec<V>, Vec<V>) {
+    verlet_step(|p| gravity(p, m, g), x, v, h)
+}
 // OFFEN: Polynomauswertung (Horner) – geht schon mit `Ring`, fehlt nur als Funktion
 
 // --- Projekte ---------------------------------------------------------------
@@ -116,10 +146,11 @@ fn newton_auto<T: OrderedField + PartialEq + Clone>(
 // OFFEN: IAPWS-95/06/10, trockene Luft – Basis vollständig (RealField + AutoDiff),
 //        fehlt nur Implementierung
 // OFFEN: Neuronale Netze (Layer, Backprop, Adam, Dropout, Faltung)
-//        – braucht InnerProductSpace (Schritt 2), Faltung über FFT (Schritt 3),
-//          Rückwärts-AutoDiff (Implementierung)
-// OFFEN: 2-/3-Körper-Problem – braucht InnerProductSpace (Schritt 2)
-// OFFEN: Navier-Stokes – braucht InnerProductSpace (Schritt 2), evtl. FFT
+//        – Faltung über FFT (Schritt 3), Rückwärts-AutoDiff (Implementierung);
+//          Layer verschiedener Größe: siehe BASIS.md, „Grenzen der Signatur“
+// ERREICHT: 2-/3-Körper-Problem – `n_body` oben, Achter-Bahn in tests/geometry.rs
+// OFFEN: Navier-Stokes – Basis bereit bis auf evtl. FFT (Schritt 3);
+//        Gitter und Operatoren sind Implementierung
 // OFFEN: FFT 1D/2D/3D – braucht Einheitswurzeln (Schritt 3)
 // OFFEN: Droste-Effekt („Logarithmus eines Bildes“) – Basis vollständig
 //        (komplexes exp/ln), fehlt nur Implementierung

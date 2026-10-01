@@ -64,8 +64,8 @@ macro_rules! float {
 
         laws! {
             $t {
-                Additive: associative, commutative, identity, inverse, cancellative;
-                Multiplicative: associative, commutative, identity, conjugation;
+                Additive: associative, commutative, identity, inverse, cancellative, conjugate_additive;
+                Multiplicative: associative, commutative, identity, conjugation, self_conjugate;
                 [Multiplicative, Additive]: distributive, zero_divisor_free, inverse_except_zero, nontrivial;
                 LessEq: total_order;
                 [Additive, LessEq]: monotone;
