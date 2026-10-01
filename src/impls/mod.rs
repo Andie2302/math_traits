@@ -18,6 +18,7 @@ mod fmath;
 pub mod vector;
 
 use crate::laws;
+use crate::signature::HasRootsOfUnity;
 use crate::signature::{
     Additive, BinaryOp, BinaryRelation, HasConjugate, HasDivRem, HasEuclideanSize, HasIdentity,
     HasInverse, HasPartialInverse, Join, LessEq, Meet, Multiplicative,
@@ -52,6 +53,16 @@ macro_rules! wrapping_int {
         impl HasConjugate for $t {
             fn conj(&self) -> Self { *self }
         }
+        impl HasRootsOfUnity for $t {
+            /// In `ℤ/2ⁿ` gibt es nur `1` und `−1`.
+            fn primitive_root_of_unity(n: usize) -> Option<Self> {
+                match n {
+                    1 => Some(1),
+                    2 => Some((0 as $t).wrapping_sub(1)),
+                    _ => None,
+                }
+            }
+        }
         impl HasDivRem for $t {
             fn div_rem(&self, d: &Self) -> Option<(Self, Self)> {
                 (*d != 0).then(|| (self.wrapping_div(*d), self.wrapping_rem(*d)))
@@ -61,7 +72,7 @@ macro_rules! wrapping_int {
         laws! {
             $t {
                 Additive: associative, commutative, identity, inverse, cancellative, conjugate_additive;
-                Multiplicative: associative, commutative, identity, conjugation, self_conjugate;
+                Multiplicative: associative, commutative, identity, conjugation, self_conjugate, primitive_root_of_unity;
                 [Multiplicative, Additive]: distributive, euclidean;
                 Meet: associative, commutative, idempotent;
                 Join: associative, commutative, idempotent;

@@ -17,6 +17,7 @@
 //! nimmt einen exakten Typ (Ganzzahlen, `GF(p)`, rationale Zahlen).
 
 use crate::laws;
+use crate::signature::HasRootsOfUnity;
 use crate::signature::{
     Additive, BinaryOp, BinaryRelation, HasConjugate, HasIdentity, HasInverse, HasPartialInverse,
     LessEq, Multiplicative,
@@ -53,6 +54,16 @@ macro_rules! float {
         impl HasConjugate for $t {
             fn conj(&self) -> Self { *self }
         }
+        impl HasRootsOfUnity for $t {
+            /// In ℝ gibt es nur `1` und `−1`.
+            fn primitive_root_of_unity(n: usize) -> Option<Self> {
+                match n {
+                    1 => Some(1.0),
+                    2 => Some(-1.0),
+                    _ => None,
+                }
+            }
+        }
         laws! {
             $t {
                 Additive: associative, commutative, identity, inverse, cancellative, conjugate_additive;
@@ -61,7 +72,7 @@ macro_rules! float {
                 LessEq: total_order;
                 [Additive, LessEq]: monotone;
                 [Multiplicative, Additive, LessEq]: positive_product;
-                Multiplicative: inverse_where_defined;
+                Multiplicative: inverse_where_defined, primitive_root_of_unity;
             }
         }
     )*};

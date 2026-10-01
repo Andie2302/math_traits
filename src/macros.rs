@@ -115,6 +115,7 @@ macro_rules! __law {
     (inner_homogeneous; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerHomogeneous; $g $t; $a); };
     (inner_conjugate_symmetric; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerConjugateSymmetric; $g $t; $a); };
     (inner_definite; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(InnerDefinite; $g $t; $a); };
+    (primitive_root_of_unity; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(PrimitiveRootOfUnity; $g $t; $a); };
     // --- Atome: zwei Parameter -------------------------------------------------
     (left_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(LeftDistributive; $g $t; $a, $b); };
     (right_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(RightDistributive; $g $t; $a, $b); };

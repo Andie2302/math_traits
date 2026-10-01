@@ -13,6 +13,7 @@
 //! Das Schlüsselwort im Makro bleibt gleich.
 
 use crate::__private::Token;
+use crate::signature::HasRootsOfUnity;
 use crate::signature::{
     Additive, BinaryOp, BinaryRelation, HasAbsorbing, HasConjugate, HasDivRem, HasEuclideanSize,
     HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse, HasSinCos, HasSqrt, InnerProduct,
@@ -717,5 +718,32 @@ pub trait InnerDefinite<S>: InnerProduct<S> + HasIdentity<Additive> {
         S: HasIdentity<Additive> + PartialEq,
     {
         v.inner(v) != S::identity() || *v == Self::identity()
+    }
+}
+
+// ===========================================================================
+// 13. Einheitswurzeln
+// ===========================================================================
+
+/// `primitive_root_of_unity(n) = Some(ω)  ⇒  ωⁿ = 1 ∧ ωᵏ ≠ 1 für 0 < k < n`
+pub trait PrimitiveRootOfUnity<Mul>: HasRootsOfUnity + HasIdentity<Mul> {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(n: usize) -> bool
+    where
+        Self: PartialEq,
+    {
+        let Some(w) = Self::primitive_root_of_unity(n) else {
+            return true;
+        };
+        let one = <Self as HasIdentity<Mul>>::identity();
+        let mut p = op::<Mul, _>(&w, &one);
+        for _ in 1..n {
+            if p == one {
+                return false;
+            }
+            p = op::<Mul, _>(&p, &w);
+        }
+        n > 0 && p == one
     }
 }

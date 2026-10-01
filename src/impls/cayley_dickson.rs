@@ -22,6 +22,7 @@
 //! wirklich prüfen. Die Inversen gibt es nur über Körpern (`f64`, `f32`).
 
 use crate::laws;
+use crate::signature::HasRootsOfUnity;
 use crate::signature::{
     Additive, BinaryOp, HasConjugate, HasIdentity, HasInverse, HasPartialInverse, Multiplicative,
     op,
@@ -165,6 +166,25 @@ macro_rules! cayley_dickson_field_laws {
 }
 
 cayley_dickson_laws!(f32, f64, i8, i16, i32, i64, i128, isize);
+
+/// Gaußsche Zahlen: Einheitswurzeln `1`, `−1`, `i` (Ordnung 1, 2, 4).
+macro_rules! gaussian_roots {
+    ($($b:ty),*) => {$(
+        impl HasRootsOfUnity for Complex<$b> {
+            fn primitive_root_of_unity(n: usize) -> Option<Self> {
+                match n {
+                    1 => Some(Complex::new(1, 0)),
+                    2 => Some(Complex::new(-1, 0)),
+                    4 => Some(Complex::new(0, 1)),
+                    _ => None,
+                }
+            }
+        }
+        laws! { Complex<$b> { Multiplicative: primitive_root_of_unity; } }
+    )*};
+}
+
+gaussian_roots!(i8, i16, i32, i64, i128, isize);
 cayley_dickson_field_laws!(f32, f64);
 
 /// Elementarfunktionen auf ℂ für `f32`/`f64` (Hauptzweige).
@@ -194,6 +214,16 @@ macro_rules! complex_elementary {
                 Some(Complex::new(re, if self.im < 0.0 { -im } else { im }))
             }
         }
+        impl HasRootsOfUnity for Complex<$b> {
+            /// `ω = e^(2πi/n)`
+            fn primitive_root_of_unity(n: usize) -> Option<Self> {
+                if n == 0 {
+                    return None;
+                }
+                let phi = 2.0 * core::f64::consts::PI as $b / n as $b;
+                Some(Complex::new(<$b as FMath>::m_cos(phi), <$b as FMath>::m_sin(phi)))
+            }
+        }
         impl HasSinCos for Complex<$b> {
             fn sin(&self) -> Self {
                 Complex::new(
@@ -210,7 +240,7 @@ macro_rules! complex_elementary {
         }
         laws! {
             Complex<$b> {
-                Multiplicative: exp_inverts_ln, sqrt_squares, inverse_where_defined;
+                Multiplicative: exp_inverts_ln, sqrt_squares, inverse_where_defined, primitive_root_of_unity;
                 [Additive, Multiplicative]: exp_homomorphism;
                 [Multiplicative, Additive]: trigonometric;
             }

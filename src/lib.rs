@@ -59,6 +59,7 @@ extern crate std;
 
 pub mod autodiff;
 pub mod derived;
+pub mod fft;
 pub mod geometry;
 pub mod impls;
 pub mod laws;

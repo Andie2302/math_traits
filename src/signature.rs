@@ -135,3 +135,13 @@ pub trait HasSinCos: Sized {
 pub trait InnerProduct<S> {
     fn inner(&self, other: &Self) -> S;
 }
+
+// ===========================================================================
+// Einheitswurzeln
+// ===========================================================================
+
+/// Eine primitive `n`-te Einheitswurzel `ω` (`ωⁿ = 1`, `ωᵏ ≠ 1` für
+/// `0 < k < n`), `None` wenn es keine gibt. Grundlage der FFT.
+pub trait HasRootsOfUnity: Sized {
+    fn primitive_root_of_unity(n: usize) -> Option<Self>;
+}
