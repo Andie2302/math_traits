@@ -57,7 +57,7 @@ jederzeit möglich.
 
 | Projekt | Basis bereit? | Fehlt noch |
 |---|---|---|
-| IAPWS-95 | **erledigt** | Crate `iapws`: alle offiziellen Prüfwerte (Tab. 6 und 7) auf 9 Stellen |
+| IAPWS-95 | **erledigt** | Crate `iapws`: Einphasen- und Zweiphasengebiet, alle offiziellen Prüfwerte (Tab. 6, 7, 8) auf 9 Stellen |
 | IAPWS-06/10, trockene Luft | **ja** | Koeffizienten und Potential nach dem Muster von IAPWS-95 |
 | Droste-Effekt („Logarithmus eines Bildes“) | **ja** | nur Implementierung (Bild-Abtastung) |
 | 2-/3-Körper-Problem | **ja** | erledigt bis auf Animation (Grafik-Crate) |

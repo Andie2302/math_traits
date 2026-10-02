@@ -84,3 +84,33 @@ fn consistency() {
     let h_from_u = st.u + st.p * 1000.0 / st.rho;
     assert!((st.h - h_from_u).abs() < 1e-9 * st.h.abs());
 }
+
+/// Tabelle 8: Zweiphasengebiet. Spalten: T, p, ρ', ρ'', h', h'', s', s''.
+#[test]
+fn table_8_saturation() {
+    #[rustfmt::skip]
+    let rows: [(f64, [f64; 7]); 3] = [
+        (275.0, [0.698_451_167e-3, 0.999_887_406e3, 0.550_664_919e-2, 0.775_972_202e1, 0.250_428_995e4, 0.283_094_670e-1, 0.910_660_121e1]),
+        (450.0, [0.932_203_564, 0.890_341_250e3, 0.481_200_360e1, 0.749_161_585e3, 0.277_441_078e4, 0.210_865_845e1, 0.660_921_221e1]),
+        (625.0, [0.169_082_693e2, 0.567_090_385e3, 0.118_290_280e3, 0.168_626_976e4, 0.255_071_625e4, 0.380_194_683e1, 0.518_506_121e1]),
+    ];
+    for (t, [p, rl, rv, hl, hv, sl, sv]) in rows {
+        let s = saturation(t).expect("Sättigung konvergiert");
+        let at = format!("T = {t} K");
+        assert_close(&format!("p bei {at}"), s.p, p);
+        assert_close(&format!("ρ' bei {at}"), s.liquid.rho, rl);
+        assert_close(&format!("ρ'' bei {at}"), s.vapor.rho, rv);
+        assert_close(&format!("h' bei {at}"), s.liquid.h, hl);
+        assert_close(&format!("h'' bei {at}"), s.vapor.h, hv);
+        assert_close(&format!("s' bei {at}"), s.liquid.s, sl);
+        assert_close(&format!("s'' bei {at}"), s.vapor.s, sv);
+    }
+}
+
+/// Siedepunkt bei Normaldruck (101.325 kPa): 373.124 K.
+#[test]
+fn boiling_point() {
+    let t = saturation_temperature(0.101_325).expect("Siedetemperatur");
+    assert!((t - 373.124).abs() < 1e-3, "{t}");
+    assert_eq!(saturation(TC + 1.0), None);
+}

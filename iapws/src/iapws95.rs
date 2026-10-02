@@ -258,3 +258,137 @@ pub fn density(t: f64, p: f64, rho_guess: f64) -> Option<f64> {
     }
     None
 }
+
+// --- Sättigung (Zweiphasengleichgewicht) ---------------------------------------------------
+
+/// Kritischer Druck in MPa.
+pub const PC: f64 = 22.064;
+/// Tripelpunkt-Temperatur in K.
+pub const TT: f64 = 273.16;
+
+/// Gesättigte Flüssigkeit und gesättigter Dampf bei derselben Temperatur.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Saturation {
+    /// Sättigungsdruck in MPa
+    pub p: f64,
+    pub liquid: State,
+    pub vapor: State,
+}
+
+/// Hilfsgleichungen (Wagner & Pruß 1993) für Startwerte: `(p_σ, ρ', ρ'')`.
+fn auxiliary(t: f64) -> (f64, f64, f64) {
+    let th = 1.0 - t / TC;
+    const A: [f64; 6] = [
+        -7.859_517_83,
+        1.844_082_59,
+        -11.786_649_7,
+        22.680_741_1,
+        -15.961_871_9,
+        1.801_225_02,
+    ];
+    const B: [f64; 6] = [
+        1.992_740_64,
+        1.099_653_42,
+        -0.510_839_303,
+        -1.754_934_79,
+        -45.517_035_2,
+        -6.746_944_50e5,
+    ];
+    const C: [f64; 6] = [
+        -2.031_502_40,
+        -2.683_029_40,
+        -5.386_264_92,
+        -17.299_160_5,
+        -44.758_658_1,
+        -63.920_106_3,
+    ];
+    let ea = [1.0, 1.5, 3.0, 3.5, 4.0, 7.5];
+    let eb = [
+        1.0 / 3.0,
+        2.0 / 3.0,
+        5.0 / 3.0,
+        16.0 / 3.0,
+        43.0 / 3.0,
+        110.0 / 3.0,
+    ];
+    let ec = [
+        2.0 / 6.0,
+        4.0 / 6.0,
+        8.0 / 6.0,
+        18.0 / 6.0,
+        37.0 / 6.0,
+        71.0 / 6.0,
+    ];
+    let sum =
+        |k: &[f64; 6], e: &[f64; 6]| k.iter().zip(e).map(|(k, e)| k * th.powf(*e)).sum::<f64>();
+    let p = PC * (TC / t * sum(&A, &ea)).exp();
+    let rho_l = RHOC * (1.0 + sum(&B, &eb));
+    let rho_v = RHOC * sum(&C, &ec).exp();
+    (p, rho_l, rho_v)
+}
+
+/// Druck (kPa), `∂p/∂ρ` und spezifische Gibbs-Energie (kJ/kg) bei `(T, ρ)`.
+fn p_dp_g(t: f64, rho: f64) -> (f64, f64, f64) {
+    let delta = rho / RHOC;
+    let tau = TC / t;
+    let r = residual(delta, tau);
+    let o = ideal(delta, tau);
+    let rt = R * t;
+    let p = rho * rt * (1.0 + delta * r.fx);
+    let dp = rt * (1.0 + 2.0 * delta * r.fx + delta * delta * r.fxx);
+    let g = rt * (1.0 + o.f + r.f + delta * r.fx);
+    (p, dp, g)
+}
+
+/// Sättigungszustand bei der Temperatur `t` (K), gültig für `TT ≤ t < TC`.
+///
+/// Gelöst wird `p(ρ') = p(ρ'')` und `g(ρ') = g(ρ'')` per Newton. Die
+/// Jacobi-Matrix folgt aus `∂g/∂ρ = (1/ρ)·∂p/∂ρ` (Gibbs-Duhem bei festem `T`).
+pub fn saturation(t: f64) -> Option<Saturation> {
+    use math_traits::signature::Contract;
+    use math_traits::tensor::{Tensor1, Tensor2, matrix::inverse};
+    if !(TT..TC).contains(&t) {
+        return None;
+    }
+    let (_, mut rl, mut rv) = auxiliary(t);
+    for _ in 0..100 {
+        let (pl, dpl, gl) = p_dp_g(t, rl);
+        let (pv, dpv, gv) = p_dp_g(t, rv);
+        let f = Tensor1([pl - pv, gl - gv]);
+        let j = Tensor2([[dpl, -dpv], [dpl / rl, -dpv / rv]]);
+        let step = inverse(&j)?.contract(&f);
+        rl -= step.0[0];
+        rv -= step.0[1];
+        if !(rl.is_finite() && rv.is_finite()) || rv <= 0.0 || rl <= rv {
+            return None;
+        }
+        if step.0[0].abs() <= 1e-13 * rl && step.0[1].abs() <= 1e-13 * rv {
+            let liquid = state(t, rl);
+            let vapor = state(t, rv);
+            return Some(Saturation {
+                p: (liquid.p + vapor.p) / 2.0,
+                liquid,
+                vapor,
+            });
+        }
+    }
+    None
+}
+
+/// Sättigungsdruck in MPa bei der Temperatur `t` (K).
+pub fn saturation_pressure(t: f64) -> Option<f64> {
+    saturation(t).map(|s| s.p)
+}
+
+/// Siedetemperatur in K beim Druck `p` (MPa), per Bisektion über
+/// [`saturation_pressure`]. Gültig zwischen Tripelpunkt und kritischem Punkt.
+pub fn saturation_temperature(p: f64) -> Option<f64> {
+    use math_traits::solve::bisect;
+    bisect(
+        |t: &f64| saturation_pressure(*t).map_or(f64::NAN, |ps| ps - p),
+        TT,
+        TC - 1e-3,
+        &1e-10,
+        200,
+    )
+}
