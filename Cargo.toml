@@ -17,3 +17,12 @@ libm = { version = "0.2", optional = true }
 
 [workspace]
 members = [".", "iapws", "droste"]
+
+# Die thermodynamischen Rechnungen sind verschachtelt (Feuchtkugel → Sättigung
+# → Dichte → Hesse-Matrix) und unoptimiert sehr langsam. Optimiert wird auch
+# im Debug-Profil; Debug-Assertions und Überlaufprüfungen bleiben an.
+[profile.dev.package.iapws]
+opt-level = 2
+
+[profile.dev.package.math_traits]
+opt-level = 2

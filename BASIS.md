@@ -61,6 +61,7 @@ jederzeit möglich.
 | IAPWS-06 (Eis Ih) | **erledigt** | komplexes Gibbs-Potential, Tabelle 6 auf 9 Stellen, Schmelzkurve aus IAPWS-06 + IAPWS-95 |
 | IAPWS-08 (Meerwasser) | **erledigt** | Salz-Anteil maschinell aus TEOS-10/GSW-C übernommen; AutoDiff-Ableitung gleich der handgeschriebenen; Standardozean, Gefrier- und Siedepunkt |
 | IAPWS-10 (feuchte Luft) mit trockener Luft (Lemmon 2000) | **erledigt** | Tabellen 7, 13, 14, 15 auf 9 Stellen; alle Ableitungen nach (A, T, ρ) per `hessian` statt 30 Handformeln |
+| Psychrometrie (rel. Feuchte, Tau-/Reifpunkt, Feuchtkugel/Eiskugel) | **erledigt** | streng über chemische Potentiale (IAPWS-10 + 95 + 06); Sättigung gleich ASHRAE auf ≤ 0.1 % |
 | Droste-Effekt („Logarithmus eines Bildes“) | **erledigt** | Crate `droste`: Testbild, gerade und spiralige Verschachtelung, nahtlos |
 | 2-/3-Körper-Problem | **ja** | erledigt bis auf Animation (Grafik-Crate) |
 | Navier-Stokes | **ja** | Gitter, Operatoren (Implementierung) |
