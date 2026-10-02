@@ -64,7 +64,7 @@ jederzeit möglich.
 | Psychrometrie (rel. Feuchte, Tau-/Reifpunkt, Feuchtkugel/Eiskugel) | **erledigt** | streng über chemische Potentiale (IAPWS-10 + 95 + 06); Sättigung gleich ASHRAE auf ≤ 0.1 % |
 | Droste-Effekt („Logarithmus eines Bildes“) | **erledigt** | Crate `droste`: Testbild, gerade und spiralige Verschachtelung, nahtlos |
 | 2-/3-Körper-Problem | **ja** | erledigt bis auf Animation (Grafik-Crate) |
-| Navier-Stokes | **ja** | Gitter, Operatoren (Implementierung) |
+| Navier-Stokes (2D, inkompressibel, periodisch) | **erledigt** | Crate `navier_stokes`: pseudospektral mit eigener FFT, RK4 aus `geometry`; Taylor-Green exakt, Erhaltungsgrößen, Kelvin-Helmholtz-Wirbel |
 | FFT 1D/2D/3D | **ja** | erledigt |
 | Neuronale Netze | **ja** | Layer, Rückwärts-AutoDiff, Adam (Implementierung) |
 

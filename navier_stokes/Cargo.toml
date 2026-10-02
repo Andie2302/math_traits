@@ -1,0 +1,11 @@
+[package]
+name = "navier_stokes"
+version = "0.1.0"
+edition = "2024"
+description = "2D inkompressible Navier-Stokes-Gleichungen, pseudospektral, aufgebaut auf math_traits"
+
+[dependencies]
+math_traits = { path = ".." }
+
+[dev-dependencies]
+png = "0.17"
