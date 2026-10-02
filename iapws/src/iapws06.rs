@@ -71,9 +71,9 @@ fn gibbs(t: D, p: D) -> D {
     let mut r2 = complex((0.0, 0.0));
     let mut pow = real(1.0);
     for (k, gk) in G0.iter().enumerate() {
-        g0 = g0 + pow * *gk;
+        g0 += pow * *gk;
         if let Some(rk) = R2.get(k) {
-            r2 = r2 + complex(*rk) * embed(pow);
+            r2 += complex(*rk) * embed(pow);
         }
         pow = pow * dpi;
     }
