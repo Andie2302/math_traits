@@ -41,7 +41,7 @@ jederzeit möglich.
 | ℂ, ℍ, 𝕆, 𝕊 (Cayley-Dickson) | erreicht | **Signatur** `HasConjugate`; Struktur `NonAssociativeRing` |
 | Bisektion, Gauß, Newton (n-dim.) | erreicht | `OrderedField` |
 | Elementarfunktionen (`RealField`, `ElementaryRing`) | erreicht | **Signatur** `HasSqrt`, `HasExp`, `HasLn`, `HasSinCos`; nachträglich `HasAtan2` (für IAPWS-06 entdeckt) |
-| AutoDiff vorwärts, 1. und 2. Ableitung, Jacobi | erreicht | duale Zahlen; Gesetz `InverseWhereDefined` |
+| AutoDiff vorwärts, 1. und 2. Ableitung, Jacobi, Hesse-Matrix (N Variablen) | erreicht | duale Zahlen; Gesetz `InverseWhereDefined` |
 | Skalarprodukt, Norm als Folgerung | erreicht | **Signatur** `InnerProduct<S>`; Gesetze `ConjugateAdditive`, `SelfConjugate` |
 | CG-Löser, RK4, Velocity-Verlet, Gravitation | erreicht | `EuclideanSpace` / `Module` |
 | Einheitswurzeln, FFT 1D/2D/3D, Faltung | erreicht | **Signatur** `HasRootsOfUnity` |
@@ -60,7 +60,7 @@ jederzeit möglich.
 | IAPWS-95 | **erledigt** | Crate `iapws`: Einphasen- und Zweiphasengebiet, alle offiziellen Prüfwerte (Tab. 6, 7, 8) auf 9 Stellen |
 | IAPWS-06 (Eis Ih) | **erledigt** | komplexes Gibbs-Potential, Tabelle 6 auf 9 Stellen, Schmelzkurve aus IAPWS-06 + IAPWS-95 |
 | IAPWS-08 (Meerwasser) | **erledigt** | Salz-Anteil maschinell aus TEOS-10/GSW-C übernommen; AutoDiff-Ableitung gleich der handgeschriebenen; Standardozean, Gefrier- und Siedepunkt |
-| IAPWS-10 (feuchte Luft), trockene Luft | **ja** | Koeffizienten und Potential nach demselben Muster |
+| IAPWS-10 (feuchte Luft) mit trockener Luft (Lemmon 2000) | **erledigt** | Tabellen 7, 13, 14, 15 auf 9 Stellen; alle Ableitungen nach (A, T, ρ) per `hessian` statt 30 Handformeln |
 | Droste-Effekt („Logarithmus eines Bildes“) | **erledigt** | Crate `droste`: Testbild, gerade und spiralige Verschachtelung, nahtlos |
 | 2-/3-Körper-Problem | **ja** | erledigt bis auf Animation (Grafik-Crate) |
 | Navier-Stokes | **ja** | Gitter, Operatoren (Implementierung) |

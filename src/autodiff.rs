@@ -192,3 +192,53 @@ pub fn partials_2<T: CommutativeRing + Clone>(
         fyy: yy.eps.eps,
     }
 }
+
+/// Wert, Gradient und Hesse-Matrix einer Funktion von `N` Variablen.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct Hessian<T, const N: usize> {
+    pub f: T,
+    pub grad: [T; N],
+    pub hess: [[T; N]; N],
+}
+
+/// Berechnet [`Hessian`] über `Dual<Dual<T>>` mit `N·(N+1)/2` Auswertungen,
+/// ohne Heap. Für Variable `i` und `j` wird `i` innen (ε₁) und `j` außen
+/// (ε₂) markiert; der Anteil bei `ε₁ε₂` ist dann `∂²f/∂xᵢ∂xⱼ`.
+pub fn hessian<T: CommutativeRing + Clone, const N: usize>(
+    f: impl Fn([Dual<Dual<T>>; N]) -> Dual<Dual<T>>,
+    x: [T; N],
+) -> Hessian<T, N> {
+    use crate::signature::Additive;
+    let zero = || <T as HasIdentity<Additive>>::identity();
+    let one = || <T as HasIdentity<Multiplicative>>::identity();
+    let pick = |b: bool| if b { one() } else { zero() };
+    let eval = |i: usize, j: usize| {
+        f(core::array::from_fn(|k| {
+            Dual::new(
+                Dual::new(x[k].clone(), pick(k == i)),
+                Dual::new(pick(k == j), zero()),
+            )
+        }))
+    };
+    let mut hess: [[T; N]; N] = core::array::from_fn(|_| core::array::from_fn(|_| zero()));
+    let mut grad: [T; N] = core::array::from_fn(|_| zero());
+    let mut value = None;
+    for i in 0..N {
+        for j in i..N {
+            let r = eval(i, j);
+            grad[i] = r.re.eps.clone();
+            grad[j] = r.eps.re.clone();
+            hess[i][j] = r.eps.eps.clone();
+            hess[j][i] = r.eps.eps;
+            value.get_or_insert(r.re.re);
+        }
+    }
+    let f = value.unwrap_or_else(|| {
+        f(core::array::from_fn(|k| {
+            Dual::constant(Dual::constant(x[k].clone()))
+        }))
+        .re
+        .re
+    });
+    Hessian { f, grad, hess }
+}

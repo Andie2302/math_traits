@@ -4,6 +4,7 @@ use math_traits::autodiff::*;
 use math_traits::derived::{powf, sigmoid, sub, tanh};
 use math_traits::impls::cayley_dickson::Complex;
 use math_traits::laws::InverseWhereDefined;
+use math_traits::num::Num;
 use math_traits::signature::*;
 use math_traits::structures::*;
 
@@ -179,4 +180,25 @@ fn atan2_and_derivatives_through_complex_functions() {
     // exp ∘ ln = id, auch mit Ableitung
     let back = l.exp();
     assert!(close(back.re.re, x) && close(back.re.eps, 1.0) && close(back.im.re, 1.0));
+}
+
+#[test]
+fn hessian_three_variables() {
+    use math_traits::autodiff::hessian;
+    // f(x, y, z) = x²·y + sin(y·z) + z³
+    let h = hessian(
+        |[x, y, z]| {
+            let (x, y, z) = (Num(x), Num(y), Num(z));
+            (x * x * y + (y * z).sin() + z * z * z).0
+        },
+        [1.5, 0.3, -0.7],
+    );
+    let (x, y, z) = (1.5f64, 0.3f64, -0.7f64);
+    assert!(close(h.grad[0], 2.0 * x * y));
+    assert!(close(h.grad[1], x * x + z * (y * z).cos()));
+    assert!(close(h.grad[2], y * (y * z).cos() + 3.0 * z * z));
+    assert!(close(h.hess[0][1], 2.0 * x) && close(h.hess[1][0], 2.0 * x));
+    assert!(close(h.hess[1][2], (y * z).cos() - y * z * (y * z).sin()));
+    assert!(close(h.hess[2][2], -y * y * (y * z).sin() + 6.0 * z));
+    assert!(close(h.hess[0][2], 0.0));
 }
