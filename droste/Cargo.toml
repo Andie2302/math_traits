@@ -1,0 +1,9 @@
+[package]
+name = "droste"
+version = "0.1.0"
+edition = "2024"
+description = "Droste-Effekt (Escher, Bildgalerie) über den komplexen Logarithmus, aufgebaut auf math_traits"
+
+[dependencies]
+math_traits = { path = ".." }
+png = "0.17"

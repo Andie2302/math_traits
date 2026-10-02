@@ -16,4 +16,4 @@ libm = ["dep:libm"]
 libm = { version = "0.2", optional = true }
 
 [workspace]
-members = [".", "iapws"]
+members = [".", "iapws", "droste"]

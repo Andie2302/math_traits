@@ -59,7 +59,7 @@ jederzeit möglich.
 |---|---|---|
 | IAPWS-95 | **erledigt** | Crate `iapws`: Einphasen- und Zweiphasengebiet, alle offiziellen Prüfwerte (Tab. 6, 7, 8) auf 9 Stellen |
 | IAPWS-06/10, trockene Luft | **ja** | Koeffizienten und Potential nach dem Muster von IAPWS-95 |
-| Droste-Effekt („Logarithmus eines Bildes“) | **ja** | nur Implementierung (Bild-Abtastung) |
+| Droste-Effekt („Logarithmus eines Bildes“) | **erledigt** | Crate `droste`: Testbild, gerade und spiralige Verschachtelung, nahtlos |
 | 2-/3-Körper-Problem | **ja** | erledigt bis auf Animation (Grafik-Crate) |
 | Navier-Stokes | **ja** | Gitter, Operatoren (Implementierung) |
 | FFT 1D/2D/3D | **ja** | erledigt |
