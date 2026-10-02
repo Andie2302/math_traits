@@ -59,7 +59,8 @@ jederzeit möglich.
 |---|---|---|
 | IAPWS-95 | **erledigt** | Crate `iapws`: Einphasen- und Zweiphasengebiet, alle offiziellen Prüfwerte (Tab. 6, 7, 8) auf 9 Stellen |
 | IAPWS-06 (Eis Ih) | **erledigt** | komplexes Gibbs-Potential, Tabelle 6 auf 9 Stellen, Schmelzkurve aus IAPWS-06 + IAPWS-95 |
-| IAPWS-08/10 (Meerwasser), trockene Luft | **ja** | Koeffizienten und Potential nach demselben Muster |
+| IAPWS-08 (Meerwasser) | **erledigt** | Salz-Anteil maschinell aus TEOS-10/GSW-C übernommen; AutoDiff-Ableitung gleich der handgeschriebenen; Standardozean, Gefrier- und Siedepunkt |
+| IAPWS-10 (feuchte Luft), trockene Luft | **ja** | Koeffizienten und Potential nach demselben Muster |
 | Droste-Effekt („Logarithmus eines Bildes“) | **erledigt** | Crate `droste`: Testbild, gerade und spiralige Verschachtelung, nahtlos |
 | 2-/3-Körper-Problem | **ja** | erledigt bis auf Animation (Grafik-Crate) |
 | Navier-Stokes | **ja** | Gitter, Operatoren (Implementierung) |
