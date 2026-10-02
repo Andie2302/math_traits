@@ -392,3 +392,8 @@ pub fn saturation_temperature(p: f64) -> Option<f64> {
         200,
     )
 }
+
+/// Spezifische Gibbs-Energie `g = f + p/ρ` in kJ/kg bei `(T, ρ)`.
+pub fn gibbs(t: f64, rho: f64) -> f64 {
+    p_dp_g(t, rho).2
+}
