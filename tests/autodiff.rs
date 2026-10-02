@@ -158,3 +158,25 @@ fn complex_elementary() {
     let one = op::<Additive, _>(&mul(&s, &s), &mul(&c, &c));
     assert!(close(one.re, 1.0) && one.im.abs() < 1e-12);
 }
+
+#[test]
+fn atan2_and_derivatives_through_complex_functions() {
+    use math_traits::laws::Atan2InvertsSinCos;
+    for t in [-3.0, -1.0, 0.0, 0.5, 3.1] {
+        assert!(<f64 as Atan2InvertsSinCos<Multiplicative>>::holds(&t));
+    }
+    // d/dx atan2(1, x) = −1 / (1 + x²)
+    let x = 0.7;
+    let a = Dual::constant(1.0).atan2(&Dual::variable(x));
+    assert!(close(a.eps, -1.0 / (1.0 + x * x)));
+
+    // f(x) = ln(x + i):  d/dx Re = x/(x²+1),  d/dx Im = −1/(x²+1)
+    type CD = Complex<Dual<f64>>;
+    let z = CD::new(Dual::variable(x), Dual::constant(1.0));
+    let l = z.ln().unwrap();
+    assert!(close(l.re.eps, x / (x * x + 1.0)));
+    assert!(close(l.im.eps, -1.0 / (x * x + 1.0)));
+    // exp ∘ ln = id, auch mit Ableitung
+    let back = l.exp();
+    assert!(close(back.re.re, x) && close(back.re.eps, 1.0) && close(back.im.re, 1.0));
+}

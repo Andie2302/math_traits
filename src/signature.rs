@@ -188,3 +188,9 @@ pub trait TryContract<Rhs> {
     type Output;
     fn try_contract(&self, rhs: &Rhs) -> Option<Self::Output>;
 }
+
+/// Winkel `atan2(y, x) ∈ (−π, π]` des Punktes `(x, y)`. Die Umkehrung von
+/// `sin`/`cos`; Grundlage für das Argument komplexer Zahlen und `ln` auf ℂ.
+pub trait HasAtan2: Sized {
+    fn atan2(&self, x: &Self) -> Self;
+}

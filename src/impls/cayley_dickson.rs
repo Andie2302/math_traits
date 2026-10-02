@@ -30,10 +30,7 @@ use crate::signature::{
 };
 use crate::structures::{Module, Ring};
 #[cfg(any(feature = "std", feature = "libm"))]
-use {
-    super::fmath::FMath,
-    crate::signature::{HasExp, HasLn, HasSinCos, HasSqrt},
-};
+use {super::fmath::FMath, crate::signature::HasSqrt};
 
 /// Ein Element `(re, im)` der Cayley-Dickson-Verdopplung von `T`.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Hash)]
@@ -202,24 +199,101 @@ macro_rules! gaussian_roots {
 gaussian_roots!(i8, i16, i32, i64, i128, isize);
 cayley_dickson_field_laws!(f32, f64);
 
-/// Elementarfunktionen auf ℂ für `f32`/`f64` (Hauptzweige).
+/// `exp`, `ln`, `sin`, `cos` auf ℂ = `CayleyDickson<T>` über einem **reellen**
+/// Grundtyp `T` (Gesetz [`SelfConjugate`]). Das Gesetz im Bound verhindert,
+/// dass die Formeln auf Quaternionen angewendet werden, wo sie falsch wären.
+/// Generisch über `T`, deshalb funktioniert auch `Complex<Dual<f64>>`
+/// (AutoDiff durch komplexe Funktionen).
+mod generic_elementary {
+    use super::Complex;
+    use crate::laws::SelfConjugate;
+    use crate::signature::{
+        Additive, BinaryOp, HasAtan2, HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse,
+        HasSinCos, Multiplicative, op,
+    };
+
+    fn add<T: BinaryOp<Additive>>(a: &T, b: &T) -> T {
+        op::<Additive, _>(a, b)
+    }
+    fn mul<T: BinaryOp<Multiplicative>>(a: &T, b: &T) -> T {
+        op::<Multiplicative, _>(a, b)
+    }
+    /// `1/2` im Grundtyp, `None` wenn `2` nicht invertierbar ist.
+    fn half<T: HasPartialInverse<Multiplicative> + BinaryOp<Additive>>() -> Option<T> {
+        let one = <T as HasIdentity<Multiplicative>>::identity();
+        add(&one, &one).try_inverse()
+    }
+
+    impl<T> HasExp for Complex<T>
+    where
+        T: SelfConjugate<Multiplicative> + HasExp + HasSinCos + BinaryOp<Multiplicative>,
+    {
+        /// `exp(a + bi) = eᵃ (cos b + i sin b)`
+        fn exp(&self) -> Self {
+            let r = self.re.exp();
+            Complex::new(mul(&r, &self.im.cos()), mul(&r, &self.im.sin()))
+        }
+    }
+
+    impl<T> HasLn for Complex<T>
+    where
+        T: SelfConjugate<Multiplicative>
+            + HasLn
+            + HasAtan2
+            + BinaryOp<Multiplicative>
+            + BinaryOp<Additive>
+            + HasPartialInverse<Multiplicative>,
+    {
+        /// `ln z = ½·ln(a² + b²) + i·atan2(b, a)`, `None` für `z = 0`.
+        fn ln(&self) -> Option<Self> {
+            let r2 = add(&mul(&self.re, &self.re), &mul(&self.im, &self.im));
+            let ln_r = mul(&r2.ln()?, &half::<T>()?);
+            Some(Complex::new(ln_r, self.im.atan2(&self.re)))
+        }
+    }
+
+    impl<T> HasSinCos for Complex<T>
+    where
+        T: SelfConjugate<Multiplicative>
+            + HasExp
+            + HasSinCos
+            + BinaryOp<Multiplicative>
+            + BinaryOp<Additive>
+            + HasInverse<Additive>
+            + HasPartialInverse<Multiplicative>,
+    {
+        /// `sin(a + bi) = sin a·cosh b + i·cos a·sinh b`
+        fn sin(&self) -> Self {
+            let (ch, sh) = cosh_sinh(&self.im);
+            Complex::new(mul(&self.re.sin(), &ch), mul(&self.re.cos(), &sh))
+        }
+        /// `cos(a + bi) = cos a·cosh b − i·sin a·sinh b`
+        fn cos(&self) -> Self {
+            let (ch, sh) = cosh_sinh(&self.im);
+            Complex::new(mul(&self.re.cos(), &ch), mul(&self.re.sin(), &sh).inverse())
+        }
+    }
+
+    /// `(cosh b, sinh b) = ((eᵇ + e⁻ᵇ)/2, (eᵇ − e⁻ᵇ)/2)`
+    fn cosh_sinh<T>(b: &T) -> (T, T)
+    where
+        T: HasExp
+            + BinaryOp<Multiplicative>
+            + BinaryOp<Additive>
+            + HasInverse<Additive>
+            + HasPartialInverse<Multiplicative>,
+    {
+        let h = half::<T>().expect("2 ist invertierbar");
+        let (ep, em) = (b.exp(), b.inverse().exp());
+        (mul(&add(&ep, &em), &h), mul(&add(&ep, &em.inverse()), &h))
+    }
+}
+
+/// Wurzel und Einheitswurzeln auf ℂ für `f32`/`f64` (Hauptzweige), dazu die
+/// Gesetze der Elementarfunktionen.
 #[cfg(any(feature = "std", feature = "libm"))]
 macro_rules! complex_elementary {
     ($($b:ty),*) => {$(
-        impl HasExp for Complex<$b> {
-            /// `exp(a + bi) = eᵃ (cos b + i sin b)`
-            fn exp(&self) -> Self {
-                let r = <$b as FMath>::m_exp(self.re);
-                Complex::new(r * <$b as FMath>::m_cos(self.im), r * <$b as FMath>::m_sin(self.im))
-            }
-        }
-        impl HasLn for Complex<$b> {
-            /// `ln z = ln|z| + i·arg z` mit `arg z ∈ (−π, π]`, `None` für `z = 0`.
-            fn ln(&self) -> Option<Self> {
-                let r = <$b as FMath>::m_hypot(self.re, self.im);
-                (r > 0.0).then(|| Complex::new(<$b as FMath>::m_ln(r), <$b as FMath>::m_atan2(self.im, self.re)))
-            }
-        }
         impl HasSqrt for Complex<$b> {
             /// Hauptwurzel mit `Re ≥ 0`. Auf ℂ überall definiert.
             fn sqrt(&self) -> Option<Self> {
@@ -237,20 +311,6 @@ macro_rules! complex_elementary {
                 }
                 let phi = 2.0 * core::f64::consts::PI as $b / n as $b;
                 Some(Complex::new(<$b as FMath>::m_cos(phi), <$b as FMath>::m_sin(phi)))
-            }
-        }
-        impl HasSinCos for Complex<$b> {
-            fn sin(&self) -> Self {
-                Complex::new(
-                    <$b as FMath>::m_sin(self.re) * <$b as FMath>::m_cosh(self.im),
-                    <$b as FMath>::m_cos(self.re) * <$b as FMath>::m_sinh(self.im),
-                )
-            }
-            fn cos(&self) -> Self {
-                Complex::new(
-                    <$b as FMath>::m_cos(self.re) * <$b as FMath>::m_cosh(self.im),
-                    -<$b as FMath>::m_sin(self.re) * <$b as FMath>::m_sinh(self.im),
-                )
             }
         }
         laws! {

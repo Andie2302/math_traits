@@ -124,6 +124,7 @@ macro_rules! __law {
     (exp_map_negation; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(ExpMapNegation; $g $t; $a); };
     (partial_associative; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(PartialAssociative; $g $t; $a); };
     (partial_commutative; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(PartialCommutative; $g $t; $a); };
+    (atan2_inverts_sin_cos; $g:tt $t:ty; $a:ty) => { $crate::__impl_law!(Atan2InvertsSinCos; $g $t; $a); };
     // --- Atome: zwei Parameter -------------------------------------------------
     (left_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(LeftDistributive; $g $t; $a, $b); };
     (right_distributive; $g:tt $t:ty; $a:ty, $b:ty) => { $crate::__impl_law!(RightDistributive; $g $t; $a, $b); };

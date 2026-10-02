@@ -18,7 +18,7 @@ use crate::signature::{
     HasExp, HasIdentity, HasInverse, HasLn, HasPartialInverse, HasSinCos, HasSqrt, InnerProduct,
     Multiplicative, ScalarMul, op,
 };
-use crate::signature::{Contract, ExpMap, HasRootsOfUnity, Outer, TryBinaryOp};
+use crate::signature::{Contract, ExpMap, HasAtan2, HasRootsOfUnity, Outer, TryBinaryOp};
 
 // ===========================================================================
 // 1. Ausgezeichnete Elemente
@@ -941,5 +941,18 @@ pub trait PartialCommutative<Op>: TryBinaryOp<Op> {
         Self: PartialEq,
     {
         a.try_op(b) == b.try_op(a)
+    }
+}
+
+/// `atan2(r·sin t, r·cos t) = t` für `r > 0` und `t ∈ (−π, π]`: `atan2` kehrt
+/// `sin`/`cos` um. Geprüft wird mit `r = 1`.
+pub trait Atan2InvertsSinCos<Mul>: HasAtan2 + HasSinCos {
+    #[doc(hidden)]
+    fn __sealed(_: Token);
+    fn holds(t: &Self) -> bool
+    where
+        Self: PartialEq,
+    {
+        t.sin().atan2(&t.cos()) == *t
     }
 }

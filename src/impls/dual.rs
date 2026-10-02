@@ -165,7 +165,45 @@ impl<S, T: ScalarMul<S>> ScalarMul<S> for Dual<T> {
     }
 }
 
+/// Komponentenweise: `(a + bε)* = a* + b*·ε` (ε ist reell).
+impl<T: crate::signature::HasConjugate> crate::signature::HasConjugate for Dual<T> {
+    fn conj(&self) -> Self {
+        Self::new(self.re.conj(), self.eps.conj())
+    }
+}
+
+impl<T> crate::signature::HasAtan2 for Dual<T>
+where
+    T: crate::signature::HasAtan2
+        + BinaryOp<Multiplicative>
+        + BinaryOp<Additive>
+        + HasInverse<Additive>
+        + HasPartialInverse<Multiplicative>,
+{
+    /// `atan2(y, x)` mit Ableitung `(x·dy − y·dx) / (x² + y²)`.
+    /// Im Ursprung (`x = y = 0`) ist die Ableitung nicht definiert; dann
+    /// bleibt der ε-Anteil 0.
+    fn atan2(&self, x: &Self) -> Self {
+        let y = self;
+        let value = y.re.atan2(&x.re);
+        let r2 = add(&mul(&x.re, &x.re), &mul(&y.re, &y.re));
+        let num = add(&mul(&x.re, &y.eps), &mul(&y.re, &x.eps).inverse());
+        let eps = match r2.try_inverse() {
+            Some(inv) => mul(&num, &inv),
+            None => add(&num, &num.inverse()),
+        };
+        Self::new(value, eps)
+    }
+}
+
 laws! {
+    for[T: CommutativeRing + crate::structures::Involution<Multiplicative> + crate::laws::ConjugateAdditive<Additive>] Dual<T> {
+        Multiplicative: conjugation;
+        Additive: conjugate_additive;
+    }
+    for[T: crate::laws::SelfConjugate<Multiplicative>] Dual<T> {
+        Multiplicative: self_conjugate;
+    }
     for[S: Ring, T: Module<S>] Dual<T> {
         S: module;
     }

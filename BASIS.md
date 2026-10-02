@@ -40,7 +40,7 @@ jederzeit möglich.
 | Modul, Vektorraum (`[T; N]`) | erreicht | **Signatur** `ScalarMul<S>` |
 | ℂ, ℍ, 𝕆, 𝕊 (Cayley-Dickson) | erreicht | **Signatur** `HasConjugate`; Struktur `NonAssociativeRing` |
 | Bisektion, Gauß, Newton (n-dim.) | erreicht | `OrderedField` |
-| Elementarfunktionen (`RealField`, `ElementaryRing`) | erreicht | **Signatur** `HasSqrt`, `HasExp`, `HasLn`, `HasSinCos` |
+| Elementarfunktionen (`RealField`, `ElementaryRing`) | erreicht | **Signatur** `HasSqrt`, `HasExp`, `HasLn`, `HasSinCos`; nachträglich `HasAtan2` (für IAPWS-06 entdeckt) |
 | AutoDiff vorwärts, 1. und 2. Ableitung, Jacobi | erreicht | duale Zahlen; Gesetz `InverseWhereDefined` |
 | Skalarprodukt, Norm als Folgerung | erreicht | **Signatur** `InnerProduct<S>`; Gesetze `ConjugateAdditive`, `SelfConjugate` |
 | CG-Löser, RK4, Velocity-Verlet, Gravitation | erreicht | `EuclideanSpace` / `Module` |

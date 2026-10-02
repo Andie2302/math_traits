@@ -103,10 +103,13 @@ macro_rules! float_elementary {
             fn sin(&self) -> Self { self.m_sin() }
             fn cos(&self) -> Self { self.m_cos() }
         }
+        impl crate::signature::HasAtan2 for $t {
+            fn atan2(&self, x: &Self) -> Self { self.m_atan2(*x) }
+        }
 
         laws! {
             $t {
-                Multiplicative: exp_inverts_ln, sqrt_squares;
+                Multiplicative: exp_inverts_ln, sqrt_squares, atan2_inverts_sin_cos;
                 [Additive, Multiplicative]: exp_homomorphism;
                 [Additive, LessEq]: sqrt_of_non_negative;
                 [Multiplicative, Additive]: trigonometric;
