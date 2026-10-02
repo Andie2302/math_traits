@@ -75,7 +75,7 @@ fn gibbs(t: D, p: D) -> D {
         if let Some(rk) = R2.get(k) {
             r2 += complex(*rk) * embed(pow);
         }
-        pow = pow * dpi;
+        pow *= dpi;
     }
 
     let tau_c = embed(tau);
