@@ -16,7 +16,7 @@ libm = ["dep:libm"]
 libm = { version = "0.2", optional = true }
 
 [workspace]
-members = [".", "iapws", "droste", "navier_stokes"]
+members = [".", "iapws", "droste", "navier_stokes", "nn"]
 
 # Die thermodynamischen Rechnungen sind verschachtelt (Feuchtkugel → Sättigung
 # → Dichte → Hesse-Matrix) und unoptimiert sehr langsam. Optimiert wird auch
@@ -28,4 +28,7 @@ opt-level = 2
 opt-level = 2
 
 [profile.dev.package.navier_stokes]
+opt-level = 2
+
+[profile.dev.package.nn]
 opt-level = 2

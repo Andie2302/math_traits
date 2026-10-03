@@ -65,6 +65,8 @@ pub mod impls;
 pub mod laws;
 mod macros;
 pub mod num;
+#[cfg(feature = "alloc")]
+pub mod reverse;
 pub mod signature;
 #[cfg(feature = "alloc")]
 pub mod solve;

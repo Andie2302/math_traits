@@ -66,7 +66,7 @@ jederzeit möglich.
 | 2-/3-Körper-Problem | **ja** | erledigt bis auf Animation (Grafik-Crate) |
 | Navier-Stokes (2D, inkompressibel, periodisch) | **erledigt** | Crate `navier_stokes`: pseudospektral mit eigener FFT, RK4 aus `geometry`; Taylor-Green exakt, Erhaltungsgrößen, Kelvin-Helmholtz-Wirbel |
 | FFT 1D/2D/3D | **ja** | erledigt |
-| Neuronale Netze | **ja** | Layer, Rückwärts-AutoDiff, Adam (Implementierung) |
+| Neuronale Netze | **teilweise** | `reverse` (Rückwärts-AutoDiff), Crate `nn`: MLP lernt XOR, Rauschen beim Training; offen: Adam, Dropout |
 
 **Kein Projekt der Liste braucht mehr eine neue Signatur.** Nach dem
 Kriterium oben ist die Basis damit für diese Ziele abgeschlossen. Ab hier geht
