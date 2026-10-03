@@ -15,11 +15,7 @@ fn gradient_matches_finite_differences() {
         let lp = plus.loss_and_gradient(&data, 0.0, &mut rng).0;
         let lm = minus.loss_and_gradient(&data, 0.0, &mut rng).0;
         let fd = (lp - lm) / (2.0 * h);
-        assert!(
-            (fd - grad[k]).abs() < 1e-7,
-            "param {k}: {fd} vs {}",
-            grad[k]
-        );
+        assert!((fd - g).abs() < 1e-7, "param {k}: {fd} vs {g}");
     }
 }
 
