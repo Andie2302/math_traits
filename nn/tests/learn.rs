@@ -7,7 +7,7 @@ fn gradient_matches_finite_differences() {
     let data = xor_data();
     let (_, grad) = net.loss_and_gradient(&data, 0.0, &mut rng);
     let h = 1e-6;
-    for k in 0..net.params.len() {
+    for (k, &g) in grad.iter().enumerate() {
         let mut plus = net.clone();
         plus.params[k] += h;
         let mut minus = net.clone();
