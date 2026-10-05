@@ -1,0 +1,14 @@
+[package]
+name = "math_traits"
+version = "0.1.0"
+edition = "2024"
+description = "Cayley-Dickson-Algebren (Real bis Trigintaduonion) als no_std-Traits ohne alloc"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+
+[features]
+default = []
+# Benoetigen einen Nightly-Compiler (f16/f128 sind noch nicht stabil).
+f16 = []
+f128 = []
