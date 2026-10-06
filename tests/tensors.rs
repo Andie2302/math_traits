@@ -210,3 +210,158 @@ fn tensor1_cayley_dickson_conversions() {
     let t: Tensor1<i32, 32> = Trigintaduonion::<i32>::basis(31).into();
     assert_eq!(t.0[31], 1);
 }
+
+#[test]
+fn outer_product_ranks_and_values() {
+    // Vektor (x) Vektor = Matrix
+    let a = Nd([1, 2, 3]);
+    let b = Nd([10, 20]);
+    let m: Tensor2<i32, 3, 2> = a.outer(b);
+    assert_eq!(m.0, [[10, 20], [20, 40], [30, 60]]);
+
+    // Skalar (x) Tensor = skalierter Tensor, Tensor (x) Skalar ebenso
+    let s = Tensor0::from(3);
+    assert_eq!(s.outer(b), Nd([30, 60]));
+    assert_eq!(b.outer(s), Nd([30, 60]));
+
+    // Matrix (x) Vektor = Rang 3 mit verschiedenen Achsenlaengen
+    let t: Tensor3<i32, 3, 2, 3> = m.outer(a);
+    for i in 0..3 {
+        for j in 0..2 {
+            for k in 0..3 {
+                assert_eq!(t.0[i][j][k], m.0[i][j] * a.0[k]);
+            }
+        }
+    }
+    // Matrix (x) Matrix = Rang 4
+    let q: Tensor4<i32, 3, 2, 2, 3> = m.outer(m.transpose());
+    assert_eq!(Tensor4::<i32, 3, 2, 2, 3>::RANK, 4);
+    assert_eq!(q.0[2][1][1][2], m.0[2][1] * m.0[2][1]);
+    // Frobenius-Norm multiplikativ: |a (x) b|^2 = |a|^2 |b|^2
+    assert_eq!(m.outer(m).norm_sqr(), m.norm_sqr() * m.norm_sqr());
+    // Assoziativ: (a (x) b) (x) c == a (x) (b (x) c)
+    assert_eq!(a.outer(b).outer(a), a.outer(b.outer(a)));
+    // Bilinear
+    let c = Nd([1, 1]);
+    assert_eq!(a.outer(b + c), a.outer(b) + a.outer(c));
+    assert_eq!((a * 2).outer(b), a.outer(b) * 2);
+}
+
+#[test]
+fn outer_product_up_to_rank_32() {
+    let a = Tensor16::<i32, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2>::from_fn(|i| {
+        (i[14] * 2 + i[15] + 1) as i32
+    });
+    let b = Tensor16::<i32, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3>::from_fn(|i| {
+        (i[0] * 3 + i[15] + 1) as i32
+    });
+    let p = a.outer(b);
+    type P = Tensor32<
+        i32,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+    >;
+    let p: P = p;
+    assert_eq!(P::RANK, 32);
+    assert_eq!(P::LEN, 24);
+    let mut idx = [0usize; 32];
+    idx[14] = 1;
+    idx[15] = 0;
+    idx[16] = 1;
+    idx[31] = 2;
+    // a[1][0] = 3, b[1][2] = 6
+    assert_eq!(*p.get(&idx).unwrap(), 3 * 6);
+}
+
+#[test]
+fn tensordot_matches_matmul_and_dot() {
+    let a = Nd([[1, 2, 3], [4, 5, 6]]);
+    let b = Nd([[7, 8], [9, 10], [11, 12]]);
+    let p: Tensor2<i32, 2, 2> = a.tensordot(b);
+    assert_eq!(p, a * b);
+    // Vektor . Vektor = Skalar
+    let u = Nd([1, 2, 3]);
+    let v = Nd([4, 5, 6]);
+    let d: Tensor0<i32> = u.tensordot(v);
+    assert_eq!(d.0, u.dot(v));
+    // Vektor . Matrix = Zeilenvektor, Matrix . Vektor = Spaltenvektor
+    let r: Tensor1<i32, 2> = u.tensordot(b);
+    assert_eq!(r.0, [58, 64]);
+    let c: Tensor1<i32, 2> = a.tensordot(u);
+    assert_eq!(c, a * u);
+    // Rang 3 . Rang 2 = Rang 3: letzte Achse von x (3) mit erster von b (3)
+    let x = Tensor3::<i32, 2, 2, 3>::from_fn(|i| (i[0] * 6 + i[1] * 3 + i[2]) as i32);
+    let y: Tensor3<i32, 2, 2, 2> = x.tensordot(b);
+    for i in 0..2 {
+        for j in 0..2 {
+            for l in 0..2 {
+                let want: i32 = (0..3).map(|k| x.0[i][j][k] * b.0[k][l]).sum();
+                assert_eq!(y.0[i][j][l], want);
+            }
+        }
+    }
+    // Rang 2 . Rang 3 = Rang 3
+    let z: Tensor3<i32, 2, 2, 3> = a.tensordot(Tensor3::<i32, 3, 2, 3>::from_fn(|i| {
+        (i[0] + i[1] + i[2]) as i32
+    }));
+    assert_eq!(Tensor3::<i32, 2, 2, 3>::LEN, 12);
+    assert_eq!(z.0[1][0][2], 4 * 2 + 5 * 3 + 6 * 4);
+    // tensordot == contract_adjacent(outer): Achsen (letzte von a, erste von b)
+    let via_outer: Tensor2<i32, 2, 2> = a.outer(b).contract_adjacent::<U1>();
+    assert_eq!(via_outer, a.tensordot(b));
+}
+
+#[test]
+fn sum_axis_hadamard_norm_cross() {
+    let t = Tensor3::<i32, 2, 3, 4>::from_fn(|i| (i[0] * 100 + i[1] * 10 + i[2]) as i32);
+    let s0: Tensor2<i32, 3, 4> = t.sum_axis::<U0>();
+    assert_eq!(s0.0[1][2], 12 + 112);
+    let s1: Tensor2<i32, 2, 4> = t.sum_axis::<U1>();
+    assert_eq!(s1.0[1][3], 103 + 113 + 123);
+    let s2: Tensor2<i32, 2, 3> = t.sum_axis::<U2>();
+    assert_eq!(s2.0[1], [406, 446, 486]);
+    // Summe ueber alle Achsen == sum()
+    let all: Tensor0<i32> = t.sum_axis::<U0>().sum_axis::<U0>().sum_axis::<U0>();
+    assert_eq!(all.0, t.sum());
+
+    let a = Nd([1, -2, 3]);
+    let b = Nd([4, 5, 6]);
+    assert_eq!(a.hadamard(b).0, [4, -10, 18]);
+    assert_eq!(a.norm_sqr(), 14);
+    let c = a.cross(b);
+    assert_eq!(c.0, [-27, 6, 13]);
+    assert_eq!(a.dot(c), 0);
+    assert_eq!(b.dot(c), 0);
+    assert_eq!(a.cross(a), Nd([0, 0, 0]));
+    assert_eq!(a.cross(b), -b.cross(a));
+}

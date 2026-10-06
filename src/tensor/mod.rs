@@ -13,6 +13,10 @@
 //! ([`U0`]..[`U31`]), da Rust (stabil) keine Rechnung mit const-Generics
 //! erlaubt. Damit lassen sich alle Permutationen/Kontraktionen
 //! zusammensetzen.
+//!
+//! Das Tensorprodukt ([`Nd::outer`]) und die Kontraktion zweier Tensoren
+//! ([`Nd::tensordot`]) sind rekursiv ueber die Array-Verschachtelung
+//! definiert und brauchen keine Achsenangabe.
 
 use crate::real::Real;
 use crate::scalar::{Scalar, Signed};
@@ -206,7 +210,15 @@ pub trait Tensor: TrivialZero + Copy + PartialEq + Add<Output = Self> + Sub<Outp
     }
     /// Frobenius-Skalarprodukt: Summe der Produkte gleicher Eintraege.
     fn dot(self, other: Self) -> Self::Scalar {
-        self.zip_map(other, |a, b| a * b).sum()
+        self.hadamard(other).sum()
+    }
+    /// Eintragsweises (Hadamard-)Produkt.
+    fn hadamard(self, other: Self) -> Self {
+        self.zip_map(other, |a, b| a * b)
+    }
+    /// Quadrierte Frobenius-Norm: Summe der Eintragsquadrate.
+    fn norm_sqr(self) -> Self::Scalar {
+        self.dot(self)
     }
 }
 
@@ -373,6 +385,131 @@ impl<S: Storage> Nd<S> {
         S: ContractAt<D>,
     {
         Nd(self.0.contract_at())
+    }
+}
+
+// ---- Summe ueber eine Achse ----------------------------------------------------
+
+/// Summiert ueber die Achse `D` (Rang sinkt um 1).
+pub trait SumAt<D>: Storage {
+    type Out: Storage<Scalar = Self::Scalar>;
+    fn sum_at(self) -> Self::Out;
+}
+impl<S: Storage, const N: usize> SumAt<Z> for [S; N] {
+    type Out = S;
+    fn sum_at(self) -> S {
+        let mut acc = S::zero();
+        for s in self {
+            acc = acc.zip_with(s, &mut |a, b| a + b);
+        }
+        acc
+    }
+}
+impl<S: SumAt<D>, D, const M: usize> SumAt<Succ<D>> for [S; M] {
+    type Out = [S::Out; M];
+    fn sum_at(self) -> Self::Out {
+        self.map(SumAt::<D>::sum_at)
+    }
+}
+
+// ---- Tensorprodukt (aeusseres Produkt) -----------------------------------------
+
+/// Tensorprodukt `self (x) B`: die Achsen von `self` gefolgt von den Achsen von `B`.
+///
+/// Rekursiv ueber die Verschachtelung: der Skalar-Blattknoten von `self`
+/// wird durch `B`, mit diesem Skalar multipliziert, ersetzt.
+pub trait OuterWith<B: Storage<Scalar = <Self as Storage>::Scalar>>: Storage {
+    type Out: Storage<Scalar = <Self as Storage>::Scalar>;
+    fn outer_with(self, b: B) -> Self::Out;
+}
+impl<T: Scalar, B: Storage<Scalar = T>> OuterWith<B> for T {
+    type Out = B;
+    fn outer_with(self, b: B) -> B {
+        b.map_with(&mut |x| self * x)
+    }
+}
+impl<S: OuterWith<B>, B: Storage<Scalar = <S as Storage>::Scalar>, const N: usize> OuterWith<B>
+    for [S; N]
+{
+    type Out = [S::Out; N];
+    fn outer_with(self, b: B) -> Self::Out {
+        self.map(|s| s.outer_with(b))
+    }
+}
+
+// ---- Tensordot: letzte Achse von A mit erster Achse von B kontrahieren ---------
+
+/// Kontrahiert die letzte Achse von `self` mit der ersten Achse von `B`
+/// (gleiche Laenge `K`). Rang: `rang(self) + rang(B) - 2`.
+///
+/// Rang 1 x Rang 1 ergibt das Skalarprodukt, Rang 2 x Rang 2 das Matrixprodukt.
+pub trait ContractWith<B: Storage<Scalar = <Self as Storage>::Scalar>>: Storage {
+    type Out: Storage<Scalar = <Self as Storage>::Scalar>;
+    fn contract_with(self, b: B) -> Self::Out;
+}
+impl<T: Scalar, R: Storage<Scalar = T>, const K: usize> ContractWith<[R; K]> for [T; K] {
+    type Out = R;
+    fn contract_with(self, b: [R; K]) -> R {
+        let mut acc = R::zero();
+        for k in 0..K {
+            let a = self[k];
+            acc = acc.zip_with(b[k], &mut |s, x| s + a * x);
+        }
+        acc
+    }
+}
+impl<S, B, const M: usize, const N: usize> ContractWith<B> for [[S; M]; N]
+where
+    [S; M]: ContractWith<B>,
+    B: Storage<Scalar = <[S; M] as Storage>::Scalar>,
+{
+    type Out = [<[S; M] as ContractWith<B>>::Out; N];
+    fn contract_with(self, b: B) -> Self::Out {
+        self.map(|row| row.contract_with(b))
+    }
+}
+
+impl<S: Storage> Nd<S> {
+    /// Summiert ueber die Achse `D`, z.B. `t.sum_axis::<U0>()` auf
+    /// `Tensor3<T, A, B, C>` ergibt `Tensor2<T, B, C>`.
+    pub fn sum_axis<D>(self) -> Nd<<S as SumAt<D>>::Out>
+    where
+        S: SumAt<D>,
+    {
+        Nd(self.0.sum_at())
+    }
+
+    /// Tensorprodukt: `Tensor<N>` (x) `Tensor<M>` ergibt `Tensor<N + M>`; die Achsen
+    /// von `self` kommen zuerst. Es gilt `(a (x) b)[i.., j..] = a[i..] * b[j..]`.
+    pub fn outer<B: Storage<Scalar = S::Scalar>>(self, other: Nd<B>) -> Nd<<S as OuterWith<B>>::Out>
+    where
+        S: OuterWith<B>,
+    {
+        Nd(self.0.outer_with(other.0))
+    }
+
+    /// Kontrahiert die letzte Achse von `self` mit der ersten von `other`
+    /// (siehe [`ContractWith`]).
+    pub fn tensordot<B: Storage<Scalar = S::Scalar>>(
+        self,
+        other: Nd<B>,
+    ) -> Nd<<S as ContractWith<B>>::Out>
+    where
+        S: ContractWith<B>,
+    {
+        Nd(self.0.contract_with(other.0))
+    }
+}
+
+impl<T: Signed> Tensor1<T, 3> {
+    /// Kreuzprodukt im Dreidimensionalen.
+    pub fn cross(self, o: Self) -> Self {
+        let (a, b) = (self.0, o.0);
+        Nd([
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+        ])
     }
 }
 
