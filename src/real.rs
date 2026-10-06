@@ -3,6 +3,7 @@ use crate::traits::{CayleyDickson, TrivialZero};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Level 0: die reellen Zahlen ueber dem Skalartyp `T`.
+#[repr(transparent)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Real<T>(pub T);
 

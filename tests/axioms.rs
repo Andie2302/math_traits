@@ -4,7 +4,10 @@ use math_traits::*;
 struct Lcg(u64);
 impl Lcg {
     fn next(&mut self) -> i64 {
-        self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        self.0 = self
+            .0
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         ((self.0 >> 33) % 7) as i64 - 3
     }
 }
@@ -218,9 +221,20 @@ fn unsigned_real_and_all_scalar_types() {
         assert!((Real::<T>::zero()).is_zero());
         assert_eq!(Real::<T>::LEVEL, 0);
     }
-    real::<u8>(); real::<u16>(); real::<u32>(); real::<u64>(); real::<u128>(); real::<usize>();
-    real::<i8>(); real::<i16>(); real::<i32>(); real::<i64>(); real::<i128>(); real::<isize>();
-    real::<f32>(); real::<f64>();
+    real::<u8>();
+    real::<u16>();
+    real::<u32>();
+    real::<u64>();
+    real::<u128>();
+    real::<usize>();
+    real::<i8>();
+    real::<i16>();
+    real::<i32>();
+    real::<i64>();
+    real::<i128>();
+    real::<isize>();
+    real::<f32>();
+    real::<f64>();
     assert_eq!(Real(7u8) / Real(2u8), Real(3u8));
 
     fn signed<T: Signed>() {
@@ -229,6 +243,12 @@ fn unsigned_real_and_all_scalar_types() {
         let z = Trigintaduonion::<T>::basis(31);
         assert_eq!(z * z, -Trigintaduonion::<T>::one());
     }
-    signed::<i8>(); signed::<i16>(); signed::<i32>(); signed::<i64>(); signed::<i128>(); signed::<isize>();
-    signed::<f32>(); signed::<f64>();
+    signed::<i8>();
+    signed::<i16>();
+    signed::<i32>();
+    signed::<i64>();
+    signed::<i128>();
+    signed::<isize>();
+    signed::<f32>();
+    signed::<f64>();
 }

@@ -26,12 +26,7 @@ pub trait NonTrivialZero: TrivialZero + CayleyDickson {
 /// `-` ist immer vorhanden. Negation (`Neg`) und Division (`Div`) haengen
 /// vom Skalartyp bzw. der Stufe ab und sind deshalb separate Bounds.
 pub trait CayleyDickson:
-    TrivialZero
-    + Copy
-    + PartialEq
-    + Add<Output = Self>
-    + Sub<Output = Self>
-    + Mul<Output = Self>
+    TrivialZero + Copy + PartialEq + Add<Output = Self> + Sub<Output = Self> + Mul<Output = Self>
 {
     /// Koeffiziententyp.
     type Scalar: Scalar;
@@ -75,7 +70,13 @@ pub trait CayleyDickson:
 
     /// Basiselement `e_i`.
     fn basis(i: usize) -> Self {
-        Self::from_fn(|j| if i == j { Self::Scalar::ONE } else { Self::Scalar::ZERO })
+        Self::from_fn(|j| {
+            if i == j {
+                Self::Scalar::ONE
+            } else {
+                Self::Scalar::ZERO
+            }
+        })
     }
 
     /// Inverses `conj(a) / N(a)`, falls `N(a)` im Skalartyp invertierbar ist
