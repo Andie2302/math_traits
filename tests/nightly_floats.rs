@@ -8,7 +8,10 @@ use math_traits::*;
 fn f16_octonion() {
     let o = Octonion::<f16>::basis(5);
     assert_eq!(o * o, -Octonion::<f16>::one());
-    assert_eq!(Octonion::<f16>::one() / Octonion::<f16>::one(), Octonion::<f16>::one());
+    assert_eq!(
+        Octonion::<f16>::one() / Octonion::<f16>::one(),
+        Octonion::<f16>::one()
+    );
 }
 
 #[cfg(feature = "f128")]

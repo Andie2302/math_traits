@@ -49,12 +49,14 @@ mod algebra;
 mod doubled;
 mod real;
 mod scalar;
+mod tensor;
 mod traits;
 
 pub use algebra::{Complex, Octonion, Quaternion, Sedenion, Trigintaduonion};
 pub use doubled::Cd;
 pub use real::Real;
 pub use scalar::{Field, Scalar, Signed};
+pub use tensor::*;
 pub use traits::{
     Alternative, Associative, CayleyDickson, Commutative, DivisionAlgebra, Flexible,
     MultiplicativeNorm, NonTrivialZero, PowerAssociative, TrivialZero,
