@@ -1,4 +1,5 @@
-use crate::traits::{CayleyDickson, TrivialZero};
+use crate::scalar::Scalar;
+use crate::traits::{Algebra, CayleyDickson, TrivialZero};
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Cayley-Dickson-Verdopplung: das Paar `(a, b)` aus zwei Elementen der Vorstufe.
@@ -78,10 +79,16 @@ impl<A: TrivialZero> TrivialZero for Cd<A> {
     }
 }
 
-impl<A: CayleyDickson + Neg<Output = A>> CayleyDickson for Cd<A> {
+impl<A: CayleyDickson + Neg<Output = A>> Algebra for Cd<A> {
     type Scalar = A::Scalar;
-    const LEVEL: usize = A::LEVEL + 1;
     const DIM: usize = 2 * A::DIM;
+    const COMMUTATIVE: bool = <Self as CayleyDickson>::LEVEL <= 1;
+    const ASSOCIATIVE: bool = <Self as CayleyDickson>::LEVEL <= 2;
+    const ALTERNATIVE: bool = <Self as CayleyDickson>::LEVEL <= 3;
+    const FLEXIBLE: bool = true;
+    const POWER_ASSOCIATIVE: bool = true;
+    const MULTIPLICATIVE_NORM: bool = <Self as CayleyDickson>::LEVEL <= 3;
+    const HAS_ZERO_DIVISORS: bool = <Self as CayleyDickson>::LEVEL >= 4;
 
     #[inline]
     fn one() -> Self {
@@ -90,18 +97,6 @@ impl<A: CayleyDickson + Neg<Output = A>> CayleyDickson for Cd<A> {
     #[inline]
     fn from_scalar(s: Self::Scalar) -> Self {
         Cd::new(A::from_scalar(s), A::zero())
-    }
-    #[inline]
-    fn conjugate(self) -> Self {
-        Cd::new(self.a.conjugate(), -self.b)
-    }
-    #[inline]
-    fn real(self) -> Self::Scalar {
-        self.a.real()
-    }
-    #[inline]
-    fn norm_sqr(self) -> Self::Scalar {
-        self.a.norm_sqr() + self.b.norm_sqr()
     }
     #[inline]
     fn coeff(&self, i: usize) -> Self::Scalar {
@@ -120,5 +115,28 @@ impl<A: CayleyDickson + Neg<Output = A>> CayleyDickson for Cd<A> {
     #[inline]
     fn scale(self, s: Self::Scalar) -> Self {
         Cd::new(self.a.scale(s), self.b.scale(s))
+    }
+    #[inline]
+    fn inverse(self) -> Option<Self> {
+        self.norm_sqr()
+            .checked_recip()
+            .map(|r| self.conjugate().scale(r))
+    }
+}
+
+impl<A: CayleyDickson + Neg<Output = A>> CayleyDickson for Cd<A> {
+    const LEVEL: usize = A::LEVEL + 1;
+
+    #[inline]
+    fn conjugate(self) -> Self {
+        Cd::new(self.a.conjugate(), -self.b)
+    }
+    #[inline]
+    fn real(self) -> Self::Scalar {
+        self.a.real()
+    }
+    #[inline]
+    fn norm_sqr(self) -> Self::Scalar {
+        self.a.norm_sqr() + self.b.norm_sqr()
     }
 }

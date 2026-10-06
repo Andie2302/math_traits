@@ -1,5 +1,5 @@
 use crate::scalar::Scalar;
-use crate::traits::{CayleyDickson, TrivialZero};
+use crate::traits::{Algebra, CayleyDickson, TrivialZero};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Level 0: die reellen Zahlen ueber dem Skalartyp `T`.
@@ -82,10 +82,16 @@ impl<T: Scalar> TrivialZero for Real<T> {
     }
 }
 
-impl<T: Scalar> CayleyDickson for Real<T> {
+impl<T: Scalar> Algebra for Real<T> {
     type Scalar = T;
-    const LEVEL: usize = 0;
     const DIM: usize = 1;
+    const COMMUTATIVE: bool = true;
+    const ASSOCIATIVE: bool = true;
+    const ALTERNATIVE: bool = true;
+    const FLEXIBLE: bool = true;
+    const POWER_ASSOCIATIVE: bool = true;
+    const MULTIPLICATIVE_NORM: bool = true;
+    const HAS_ZERO_DIVISORS: bool = false;
 
     #[inline]
     fn one() -> Self {
@@ -94,18 +100,6 @@ impl<T: Scalar> CayleyDickson for Real<T> {
     #[inline]
     fn from_scalar(s: T) -> Self {
         Real(s)
-    }
-    #[inline]
-    fn conjugate(self) -> Self {
-        self
-    }
-    #[inline]
-    fn real(self) -> T {
-        self.0
-    }
-    #[inline]
-    fn norm_sqr(self) -> T {
-        self.0 * self.0
     }
     #[inline]
     fn coeff(&self, i: usize) -> T {
@@ -119,5 +113,28 @@ impl<T: Scalar> CayleyDickson for Real<T> {
     #[inline]
     fn scale(self, s: T) -> Self {
         Real(self.0 * s)
+    }
+    #[inline]
+    fn inverse(self) -> Option<Self> {
+        self.norm_sqr()
+            .checked_recip()
+            .map(|r| self.conjugate().scale(r))
+    }
+}
+
+impl<T: Scalar> CayleyDickson for Real<T> {
+    const LEVEL: usize = 0;
+
+    #[inline]
+    fn conjugate(self) -> Self {
+        self
+    }
+    #[inline]
+    fn real(self) -> T {
+        self.0
+    }
+    #[inline]
+    fn norm_sqr(self) -> T {
+        self.0 * self.0
     }
 }

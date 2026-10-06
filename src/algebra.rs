@@ -2,7 +2,7 @@ use crate::doubled::Cd;
 use crate::real::Real;
 use crate::scalar::{Field, Scalar, Signed};
 use crate::traits::{
-    Alternative, Associative, CayleyDickson, Commutative, DivisionAlgebra, Flexible,
+    Algebra, Alternative, Associative, CayleyDickson, Commutative, DivisionAlgebra, Flexible,
     MultiplicativeNorm, NonTrivialZero, PowerAssociative,
 };
 use core::ops::{Div, DivAssign};
@@ -22,7 +22,7 @@ pub type Trigintaduonion<T> = Cd<Sedenion<T>>;
 
 macro_rules! mark {
     ($tr:ident: $($ty:ident),*) => {$(
-        impl<T: Scalar> $tr for $ty<T> where $ty<T>: CayleyDickson {}
+        impl<T: Scalar> $tr for $ty<T> where $ty<T>: Algebra {}
     )*};
 }
 mark!(Commutative: Real, Complex);
@@ -90,7 +90,7 @@ macro_rules! arrays {
     ($ty:ident, $n:literal) => {
         impl<T: Signed> From<[T; $n]> for $ty<T> {
             fn from(arr: [T; $n]) -> Self {
-                <Self as CayleyDickson>::from_fn(|i| arr[i])
+                <Self as Algebra>::from_fn(|i| arr[i])
             }
         }
         impl<T: Signed> From<$ty<T>> for [T; $n] {

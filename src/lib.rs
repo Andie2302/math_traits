@@ -18,7 +18,7 @@
 //! * `/` gibt es fuer `Real<T>` (bei Ganzzahlen ganzzahlig, panikt bei 0)
 //!   und fuer `Complex`, `Quaternion`, `Octonion` mit Float-Skalaren
 //!   (`Div` = Multiplikation mit dem Inversen von rechts). Ab `Sedenion`
-//!   existiert keine Division, nur [`CayleyDickson::inverse`].
+//!   existiert keine Division, nur [`Algebra::inverse`].
 //!
 //! # Axiome pro Stufe
 //!
@@ -34,7 +34,14 @@
 //! Alle Stufen sind zusaetzlich potenzassoziativ. Die Axiome sind als
 //! Marker-Traits ([`Commutative`], [`Associative`], [`Alternative`],
 //! [`Flexible`], [`PowerAssociative`], [`MultiplicativeNorm`],
-//! [`DivisionAlgebra`]) und als Konstanten in [`CayleyDickson`] verfuegbar.
+//! [`DivisionAlgebra`]) und als Konstanten in [`Algebra`] verfuegbar.
+//!
+//! # Clifford-Algebren
+//!
+//! [`Clifford`] bildet `Cl(p, q, r)` fuer beliebige Signaturen ab (siehe Modul `clifford`
+//! bzw. die Aliase wie [`Cl3`], [`Sta`], [`Pga3`], [`Cga3`]). Cayley-Dickson- und
+//! Clifford-Algebren teilen sich das Supertrait [`Algebra`]; Oktonionen und hoeher sind
+//! keine Clifford-Algebren.
 //!
 //! # Overflow
 //!
@@ -46,6 +53,7 @@
 #![forbid(unsafe_code)]
 
 mod algebra;
+mod clifford;
 mod doubled;
 mod real;
 mod scalar;
@@ -53,11 +61,12 @@ mod tensor;
 mod traits;
 
 pub use algebra::{Complex, Octonion, Quaternion, Sedenion, Trigintaduonion};
+pub use clifford::*;
 pub use doubled::Cd;
 pub use real::Real;
 pub use scalar::{Field, Scalar, Signed};
 pub use tensor::*;
 pub use traits::{
-    Alternative, Associative, CayleyDickson, Commutative, DivisionAlgebra, Flexible,
+    Algebra, Alternative, Associative, CayleyDickson, Commutative, DivisionAlgebra, Flexible,
     MultiplicativeNorm, NonTrivialZero, PowerAssociative, TrivialZero,
 };

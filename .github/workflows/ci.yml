@@ -52,6 +52,7 @@ jobs:
         with:
           components: rustfmt
       - run: python3 tools/gen_ranks.py
+      - run: python3 tools/gen_clifford.py
       - run: cargo fmt
-      - name: src/tensor/ranks.rs stimmt mit tools/gen_ranks.py ueberein
+      - name: Generierte Dateien stimmen mit den Generatoren in tools/ ueberein
         run: git diff --exit-code
