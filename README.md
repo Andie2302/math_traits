@@ -21,4 +21,8 @@ Cayley-Dickson-Algebren als `no_std`-Traits ohne `alloc`: `Real<T>`, `Complex<T>
   `Complex`..`Trigintaduonion` verbunden.
 * Achsen vertauschen / kontrahieren: `swap_adjacent::<Uk>()`, `contract_adjacent::<Uk>()`;
   `Tensor2`: `transpose`, `trace`, `identity`, Matrixprodukt via `*` (auch Matrix * Vektor).
+* Tensorprodukt: `a.outer(b)` ergibt `Tensor<N+M>` (`(a (x) b)[i.., j..] = a[i..] * b[j..]`), bis Rang 32.
+* `a.tensordot(b)` kontrahiert die letzte Achse von `a` mit der ersten von `b` (Rang 1 x 1 = Skalarprodukt,
+  Rang 2 x 2 = Matrixprodukt); `t.sum_axis::<Uk>()` summiert eine Achse weg.
+* Zusaetzlich: `hadamard`, `norm_sqr`, `dot`, `sum` (alle Raenge) und `cross` (`Tensor1<T, 3>`).
 * `tools/gen_ranks.py` erzeugt `src/tensor/ranks.rs`.
